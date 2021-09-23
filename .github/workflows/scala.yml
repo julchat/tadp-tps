@@ -1,12 +1,18 @@
 name: Continuous Integration for Scala
-on: [push,pull_request]
+on:
+  pull_request:
+    branches:
+      - master
+  release:
+    types:
+      - created
 
 jobs:
   build:
     name: Build and Test
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
         scala: [2.13.0]
         java: [adopt@1.8]
     
