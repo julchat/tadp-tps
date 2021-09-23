@@ -16,17 +16,20 @@ class Aspects
       raise "ArgumentError: wrong number of arguments (0 for +1)"
     end
 
-    if arg.length() == 1
-      puts "Tengo 1 parametro"
-      clase = arg[0]
-      if clase.is_a? Class
-        puts "si es clase"
-      else
-        puts "no es clase"
+    if arg.length == 1
+      puts "Tengo 1 parametro, deberia ser un bloque"
+      bloque = arg[0]
+
+      if  bloque.instance_of? Regexp
+        puts "Sos una expresion regular"
+      end
+
+      if  bloque.instance_of? Class
+        puts "Sos una Clase"
       end
     end
 
-    if arg.length() == 3
+    if arg.length == 3
       puts "Tengo 3 parametros"
       # arg[0] validar que es una CLAss
       # arg[1] validar que es una Modulo
@@ -36,5 +39,8 @@ class Aspects
 end
 
 # TEST
-Aspects.on PClase, Bloque do
+#Aspects.on /^Foo.*/ do
+#end
+
+Aspects.on  do
 end
