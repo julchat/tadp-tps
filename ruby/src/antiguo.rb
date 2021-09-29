@@ -1,6 +1,8 @@
 class Aspects
 
   @origen = ["Pepe","SClase"]
+  # KERNEL.algo
+  # UnModulo, otroModulo : Modulo segun la def is_a? Module
 
 =begin
   def validar_expresion_regular(name_clase)
@@ -17,7 +19,7 @@ class Aspects
       puts "Tengo 1 parametro"
       entidad = arg[0]
 
-      if  entidad.instance_of? Regexp
+      if  entidad.instance_of? Regexp  # is_a?
         puts "Sos una expresion regular"
         #@origen.include?(bloque)
         #entidad.match("Pepe y Juan")
@@ -30,9 +32,10 @@ class Aspects
 
       end
 
-      if  entidad.instance_of? Class
+      if  entidad.instance_of? Class # < Module
         puts "Sos una Clase"
       end
+
     end
 
     if arg.length == 3
@@ -53,8 +56,8 @@ describe 'Prototyped objects' do
               end}.to raise_error(ArgumentError)
   end
   it 'Origen valido' do
-    expect{Aspects.on /^Pepe/ do
-            end}.to be(true)
+    expect(Aspects.on (/^Pepe/) {} ).to be true
   end
+  # Bloque {} -> raise_error
 end
 
