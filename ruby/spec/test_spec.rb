@@ -20,3 +20,16 @@ describe 'TEST Aspects' do
     expect(Aspects.on CN, Pepe, {}).to eq("Exito!")
   end
 end
+
+describe 'TEST AspectsModificado' do
+
+  it 'Debe tener al menos 1 argumento' do
+    # Los Procedimientos van con {} osea no estoy esperando algo como un return. si puedo capturar un raise
+    expect{Aspects.on {}}.to raise_error(ArgumentError)
+  end
+
+  it 'Pepe no pertenece al origen' do
+    expect{Aspects.on /Pepe/ ,{}}.to raise_error(ArgumentError)
+  end
+
+end
