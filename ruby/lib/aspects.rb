@@ -1,29 +1,4 @@
 class Aspects
-  #attr_accessor :block
-  @origen = ["Pepe"]
-
-  def self.on(*argumentos,&bloque)
-    #self.block = bloque
-    #self.args = argumentos
-
-    if argumentos == []
-      raise ArgumentError.new
-    else # si algun argumento pertenece a los de mi origen
-      #argumentos.each { |a| puts a.to_s }
-
-      argumentos.each do |arg|
-        if @origen.any? { |o| (Kernel.const_get o) == arg }
-          return "Exito!"
-        end
-      end
-
-      raise ArgumentError.new # Origen vacio
-    end
-  end
-
-end
-
-class AspectsModificado
 
   def self.on(*argumentos,&bloque)
     clases_modulos_encontrados = [] # lista que almacena (si es que existen) las clases/modulos/objetos pasados por parametro
@@ -42,6 +17,53 @@ class AspectsModificado
       raise ArgumentError.new("origen vacio") if clases_modulos_encontrados.empty?
     end
 
+    @origenes = clases_modulos_encontrados.map{ |un_origen| Origen.new(un_origen) }
+    @origenes.flat_map{|origen| origen.filtrar_metodos}
+  end
+
+  def transform(*args, &bloque)
+
+  end
+
+  def where(*args, &bloque)
+
   end
 
 end
+
+class Origen
+  attr_accessor :origen, :metodos
+
+  def initialize(origennuevo)
+    metodos = []
+    self.origen = origennuevo
+    (Kernel.const_get (origen.to_s)).singleton_class.define_method :get_origin_methods do
+      if(self.instance_of? Class)
+        puts "soy una clase o modulo"
+        self.instance_methods
+      else
+        puts "soy un objeto"
+        self.singleton_class.instance_methods
+      end
+    end
+  end
+  def filtrar_metodos
+    (Kernel.const_get (origen.to_s)).send(:get_origin_methods)
+  end
+end
+
+class Pepe
+  def ir_al_banio
+    "Fui al banio"
+  end
+end
+
+=begin
+puts Aspects.on /Pepe/ do
+
+end
+=end
+
+miPepe = Pepe.new
+
+puts Aspects.on miPepe do end

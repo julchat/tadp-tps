@@ -1,6 +1,9 @@
+
+=begin
 class Aspects
 
   @origen = ["Pepe","SClase"]
+=end
   # KERNEL.algo
   # UnModulo, otroModulo : Modulo segun la def is_a? Module
 
@@ -10,6 +13,7 @@ class Aspects
   end
 =end
 
+=begin
   def self.on(*arg,&bloque)
     if arg == []
       raise ArgumentError.new
@@ -43,12 +47,12 @@ class Aspects
     end
   end
 end
+=end
 
 # TEST
 describe 'Prototyped objects' do
   it 'ArgumentError: wrong number of arguments (0 for +1)' do
-    expect {Aspects.on  do
-              end}.to raise_error(ArgumentError)
+    expect {Aspects.on {}}.to raise_error(ArgumentError.new('wrong number of arguments (0 for +1)'))
   end
 
   it 'ArgumentError: origen vacío' do
@@ -60,4 +64,53 @@ describe 'Prototyped objects' do
   end
   # Bloque {} -> raise_error
 end
+=begin
+class Aspects
+  #attr_accessor :block
+  @origen = ["Pepe"]
 
+  def self.on(*argumentos,&bloque)
+    #self.block = bloque
+    #self.args = argumentos
+
+    if argumentos == []
+      raise ArgumentError.new
+    else # si algun argumento pertenece a los de mi origen
+      #argumentos.each { |a| puts a.to_s }
+
+      argumentos.each do |arg|
+        if @origen.any? { |o| (Kernel.const_get o) == arg }
+          return "Exito!"
+        end
+      end
+
+      raise ArgumentError.new # Origen vacio
+    end
+  end
+
+end
+=end
+=begin
+describe 'TEST Aspects' do
+  class CN
+  end
+  class CO
+  end
+  class Pepe # SI pertenece al origen
+  end
+
+  it 'Debe tener al menos 1 argumento' do
+    # Los Procedimientos van con {} osea no estoy esperando algo como un return. si puedo capturar un raise
+      expect{Aspects.on {}}.to raise_error(ArgumentError)
+  end
+
+  it 'No hay parte del origen' do
+    expect{Aspects.on CN, CO ,{}}.to raise_error(ArgumentError)
+  end
+
+  it 'Pepe si pertenece al origen' do
+    # Creo que cuando espero que algo retorne "()"
+    expect(Aspects.on CN, Pepe, {}).to eq("Exito!")
+  end
+end
+=end
