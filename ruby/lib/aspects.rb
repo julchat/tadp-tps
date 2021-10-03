@@ -17,15 +17,14 @@ class Aspects
       raise ArgumentError.new("origen vacio") if clases_modulos_encontrados.empty?
     end
 
-    @origenes = clases_modulos_encontrados.map{ |un_origen| Origen.new(un_origen) }
-    @origenes.flat_map{|origen| origen.filtrar_metodos}
-  end
-
-  def transform(*args, &bloque)
-
+    @origenes = clases_modulos_encontrados.flat_map{ |un_origen| Origen.new(un_origen) }
   end
 
   def where(*args, &bloque)
+
+  end
+
+  def transform(*args, &bloque)
 
   end
 
@@ -35,21 +34,28 @@ class Origen
   attr_accessor :origen, :metodos
 
   def initialize(origennuevo)
-    metodos = []
+    metodos = Array.new
     self.origen = origennuevo
-    (Kernel.const_get (origen.to_s)).singleton_class.define_method :get_origin_methods do
-      if(self.instance_of? Class)
-        puts "soy una clase o modulo"
-        self.instance_methods
+    origen = get_origen_posta
+    metodos = instance_exec origen do
+      |origenaevaluar|
+      if origenaevaluar.is_a? Class
+        origenaevaluar.instance_methods
       else
-        puts "soy un objeto"
-        self.singleton_class.instance_methods
-      end
+        origenaevaluar.singleton_class.instance_methods
     end
+    end
+    self
   end
-  def filtrar_metodos
-    (Kernel.const_get (origen.to_s)).send(:get_origin_methods)
-  end
+
+  def get_origen_posta
+    if origen.is_a? Symbol
+      origenposta = (Kernel.const_get (origen.to_s))
+    else
+      origenposta = origen
+    end
+  origenposta
+end
 end
 
 class Pepe
@@ -58,12 +64,17 @@ class Pepe
   end
 end
 
-=begin
-puts Aspects.on /Pepe/ do
+class Juan
 
 end
-=end
+
+puts Aspects.on /Pepe/, Juan do
+
+end
+
 
 miPepe = Pepe.new
 
 puts Aspects.on miPepe do end
+
+

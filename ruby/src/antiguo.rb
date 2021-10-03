@@ -114,3 +114,41 @@ describe 'TEST Aspects' do
   end
 end
 =end
+
+
+=begin
+class Origen
+  attr_accessor :origen, :metodos
+
+  def initialize(origennuevo)
+    metodos = []
+    self.origen = origennuevo
+    origenposta = get_origen_posta
+    origenposta.define_method :get_origin_methods do
+      if(self.instance_of? Class)
+        puts "soy una clase o modulo"
+        self.instance_methods
+      else
+        puts "soy un objeto"
+        self.singleton_class.instance_methods
+      end
+    end
+  end
+  def filtrar_metodos
+    (Kernel.const_get (origen.to_s)).send(:get_origin_methods)
+  end
+
+  private
+
+  def get_origen_posta
+    if origen.is_a? Symbol
+      puts "soy un simbolo"
+      origenposta = (Kernel.const_get (origen.to_s)).singleton_class
+    else
+      puts "no soy un simbolo"
+      origenposta = origen
+    end
+    origenposta
+  end
+end
+=end
