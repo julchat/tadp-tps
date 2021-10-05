@@ -1,3 +1,5 @@
+require_relative 'origen'
+
 class Aspects
 
   def self.on(*argumentos,&bloque)
@@ -20,61 +22,44 @@ class Aspects
     @origenes = clases_modulos_encontrados.flat_map{ |un_origen| Origen.new(un_origen) }
   end
 
-  def where(*args, &bloque)
+  def where(*condiciones)
 
   end
 
-  def transform(*args, &bloque)
+  def name(expresion_regular)
+
+  end
+
+  def transform(metodos,&bloque)
+
+  end
+
+  def redirect_to(objeto)
 
   end
 
 end
 
-class Origen
-  attr_accessor :origen, :metodos
 
-  def initialize(origennuevo)
-    metodos = Array.new
-    self.origen = origennuevo
-    origen = get_origen_posta
-    metodos = instance_exec origen do
-      |origenaevaluar|
-      if origenaevaluar.is_a? Class
-        origenaevaluar.instance_methods
-      else
-        origenaevaluar.singleton_class.instance_methods
-    end
-    end
-    self
-  end
-
-  def get_origen_posta
-    if origen.is_a? Symbol
-      origenposta = (Kernel.const_get (origen.to_s))
-    else
-      origenposta = origen
-    end
-  origenposta
-end
-end
-
-class Pepe
-  def ir_al_banio
-    "Fui al banio"
+# entorno
+class ClaseA
+  def saludar(x)
+    "Hola, " + x
   end
 end
 
-class Juan
-
+class ClaseB
+  def saludar(x)
+    "Adiosín, " + x
+  end
 end
 
-puts Aspects.on /Pepe/, Juan do
-
+# test
+Aspects.on ClaseA do
+  #transform(where name(/saludar/)) do
+  #  redirect_to(ClaseB.new)
+  #end
+  transform(ClaseA.instance_methods(false)) do
+    redirect_to(ClaseB.new)
+  end
 end
-
-
-miPepe = Pepe.new
-
-puts Aspects.on miPepe do end
-
-
