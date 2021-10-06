@@ -1,12 +1,16 @@
 module Name
-  def name(regex)
-    self.metodos.select{|un_metodo| regex.match?(un_metodo.to_s)}
+  def name(*args)
+    self.metodos.select{|un_metodo| args.at(0).match?(un_metodo.to_s)}
   end
 end
 
 module Has_Parameters
   def has_parameters(*args)
-
+    puts self.origen.class
+    origenaux = self.origen.new
+    if not(args.at(1).is_a?Regexp)
+    self.metodos.select{|un_metodo| origenaux.method(un_metodo).arity == args.at(0)}
+    end
   end
 end
 
@@ -54,8 +58,7 @@ class Origen
 
   def initialize(origennuevo)
     metodos = Array.new
-    self.origen = origennuevo
-    origen = get_origen_posta
+    self.origen = get_origen_posta origennuevo
     self.metodos = instance_exec origen do
       |origenaevaluar|
       if origenaevaluar.is_a? Class
@@ -68,18 +71,15 @@ class Origen
   end
 
   def where(*args)
-    puts args
-    args.map { |una_condicion| self.send(una_condicion)}
     puts args.reduce(args.at(0)) { |listas_concatenadas, lista| lista & listas_concatenadas }
   end
 
-  private def get_origen_posta
-    if origen.is_a? Symbol
-      origenposta = (Kernel.const_get (origen.to_s))
+  private def get_origen_posta (origenposta)
+    if origenposta.is_a? Symbol
+      (Kernel.const_get (origenposta.to_s))
     else
-      origenposta = origen
+      origenposta
     end
-  origenposta
 end
 end
 
@@ -97,8 +97,22 @@ class Pepe
   end
 end
 
-Aspects.on Pepe do
-  where name(/hacer_la_primera/)
+class MiClase
+  def foo(param1,param2)
+  end
+
+  def bar(param1,param2)
+  end
 end
 
 
+
+=begin
+Aspects.on Pepe do
+  where name(/hacer_la_primera/), name(/hacer_la_segunda/)
+end
+=end
+
+Aspects.on MiClase do
+  where name(/fo{2}/), name(/foo/), has_parameters(2,"mandatory")
+end
