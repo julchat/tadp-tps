@@ -1,3 +1,21 @@
+module Name
+  def name(regex)
+    self.metodos.select{|un_metodo| regex.match?(un_metodo.to_s)}
+  end
+end
+
+module Has_Parameters
+  def has_parameters(*args)
+
+  end
+end
+
+module Neg
+  def neg(*args)
+
+  end
+end
+
 class Aspects
 
   def self.on(*argumentos,&bloque)
@@ -18,9 +36,7 @@ class Aspects
     end
 
     @origenes = clases_modulos_encontrados.flat_map{ |un_origen| Origen.new(un_origen) }
-  end
-
-  def where(*args, &bloque)
+    @origenes.each { |un_origen| un_origen.instance_eval(&bloque) }
 
   end
 
@@ -32,12 +48,15 @@ end
 
 class Origen
   attr_accessor :origen, :metodos
+  include Name
+  include Has_Parameters
+  include Neg
 
   def initialize(origennuevo)
     metodos = Array.new
     self.origen = origennuevo
     origen = get_origen_posta
-    metodos = instance_exec origen do
+    self.metodos = instance_exec origen do
       |origenaevaluar|
       if origenaevaluar.is_a? Class
         origenaevaluar.instance_methods
@@ -48,7 +67,13 @@ class Origen
     self
   end
 
-  def get_origen_posta
+  def where(*args)
+    puts args
+    args.map { |una_condicion| self.send(una_condicion)}
+    puts args.reduce(args.at(0)) { |listas_concatenadas, lista| lista & listas_concatenadas }
+  end
+
+  private def get_origen_posta
     if origen.is_a? Symbol
       origenposta = (Kernel.const_get (origen.to_s))
     else
@@ -62,19 +87,18 @@ class Pepe
   def ir_al_banio
     "Fui al banio"
   end
+
+  def hacer_la_primera
+    "hice la primera"
+  end
+
+  def hacer_la_segunda
+    "hice la segunda"
+  end
 end
 
-class Juan
-
+Aspects.on Pepe do
+  where name(/hacer_la_primera/)
 end
-
-puts Aspects.on /Pepe/, Juan do
-
-end
-
-
-miPepe = Pepe.new
-
-puts Aspects.on miPepe do end
 
 
