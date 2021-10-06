@@ -1,4 +1,34 @@
-require_relative 'origen'
+module Name
+  def name(*args)
+    self.metodos.select{|un_metodo| args.at(0).match?(un_metodo.to_s)}
+  end
+end
+
+module Has_Parameters
+  def has_parameters(*args)
+    puts self.origen.class
+    origenaux = self.origen.new
+    if not(args.at(1).is_a?Regexp)
+      self.metodos.select{|un_metodo| origenaux.method(un_metodo).arity == args.at(0)}
+    end
+  end
+end
+
+module Neg
+  def neg(*args)
+
+  end
+end
+
+module RedirectTo
+  def redirect_to(objeto)
+    @metodos_filtrados.each do |metodo_filtrado|
+      @origen.define_method(metodo_filtrado.to_sym) do |*args|
+        objeto.send(metodo_filtrado.to_sym,*args)
+      end
+    end
+  end
+end
 
 class Aspects
 
@@ -20,24 +50,49 @@ class Aspects
     end
 
     @origenes = clases_modulos_encontrados.flat_map{ |un_origen| Origen.new(un_origen) }
-  end
-
-  def where(*condiciones)
+    @origenes.each { |un_origen| un_origen.instance_eval(&bloque) }
 
   end
 
-  def name(expresion_regular)
+end
 
+class Origen
+  attr_accessor :origen, :metodos, :metodos_filtrados
+  include Name
+  include Has_Parameters
+  include Neg
+  include RedirectTo
+
+  def initialize(origennuevo)
+    metodos = Array.new
+    self.origen = get_origen_posta origennuevo
+    self.metodos = instance_exec origen do
+    |origenaevaluar|
+      if origenaevaluar.is_a? Class
+        origenaevaluar.instance_methods
+      else
+        origenaevaluar.singleton_class.instance_methods
+      end
+    end
+    self
   end
 
-  def transform(metodos,&bloque)
-
+  def where(*args)
+    args.reduce(args.at(0)) { |listas_concatenadas, lista| lista & listas_concatenadas }
   end
 
-  def redirect_to(objeto)
-
+  def transform(metodos_filtrados, &bloque)
+    @metodos_filtrados = metodos_filtrados
+    instance_eval(&bloque)
   end
 
+  private def get_origen_posta (origenposta)
+    if origenposta.is_a? Symbol
+      (Kernel.const_get (origenposta.to_s))
+    else
+      origenposta
+    end
+  end
 end
 
 
@@ -56,10 +111,9 @@ end
 
 # test
 Aspects.on ClaseA do
-  #transform(where name(/saludar/)) do
-  #  redirect_to(ClaseB.new)
-  #end
-  transform(ClaseA.instance_methods(false)) do
+  transform(where name(/saludar/)) do
     redirect_to(ClaseB.new)
   end
 end
+
+puts ClaseA.new.saludar("Mundo")
