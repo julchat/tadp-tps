@@ -29,4 +29,26 @@ describe 'TEST AspectsModificado' do
     expect(Aspects.on(Juan).include?(:saludar))
   end
 
+  it "La ClaseA ejecuta el metodo saludar de la ClaseB" do
+    class ClaseA
+      def saludar(x)
+        "Hola, " + x
+      end
+    end
+
+    class ClaseB
+      def saludar(x)
+        "Adiosín, " + x
+      end
+    end
+
+    Aspects.on ClaseA do
+      transform(where name(/saludar/)) do
+        redirect_to(ClaseB.new)
+      end
+    end
+
+    expect(ClaseA.new.saludar("mundo")).to eq("Adiosín, mundo")
+  end
+
 end

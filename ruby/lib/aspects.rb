@@ -23,8 +23,13 @@ end
 module RedirectTo
   def redirect_to(objeto)
     @metodos_filtrados.each do |metodo_filtrado|
-      @origen.define_method(metodo_filtrado.to_sym) do |*args|
+      redireccion = proc do |*args|
         objeto.send(metodo_filtrado.to_sym,*args)
+      end
+      if @origen.is_a? Class
+        @origen.define_method(metodo_filtrado.to_sym,redireccion)
+      else
+        @origen.define_singleton_method(metodo_filtrado.to_sym,redireccion)
       end
     end
   end
@@ -94,26 +99,3 @@ class Origen
     end
   end
 end
-
-
-# entorno
-class ClaseA
-  def saludar(x)
-    "Hola, " + x
-  end
-end
-
-class ClaseB
-  def saludar(x)
-    "Adiosín, " + x
-  end
-end
-
-# test
-Aspects.on ClaseA do
-  transform(where name(/saludar/)) do
-    redirect_to(ClaseB.new)
-  end
-end
-
-puts ClaseA.new.saludar("Mundo")
