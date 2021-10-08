@@ -35,6 +35,28 @@ module RedirectTo
   end
 end
 
+module InyeccionLogica
+  def before(&bloque)
+    @metodos_filtrados.each do |metodo_filtrado|
+      @origen.alias_method "#{metodo_filtrado}_super_before".to_sym, metodo_filtrado.to_sym
+      @origen.define_method("#{metodo_filtrado}_before".to_sym) do |instancia,cont,*args|
+        send("#{metodo_filtrado}_super_before".to_sym,*args)
+      end
+    end
+
+    metodo = @origen.new.method(:m1_before)
+
+    @metodos_filtrados.each do |metodo_filtrado|
+      @origen.define_method("#{metodo_filtrado}".to_sym) do |*args|
+        instance_exec(@origen,metodo,*args,&bloque)
+        #bloque.call(@origen,metodo,*args)
+      end
+    end
+
+  end
+
+end
+
 class Aspects
 
   def self.on(*argumentos,&bloque)
@@ -67,6 +89,7 @@ class Origen
   include Has_Parameters
   include Neg
   include RedirectTo
+  include InyeccionLogica
 
   def initialize(origennuevo)
     metodos = Array.new
@@ -99,3 +122,65 @@ class Origen
     end
   end
 end
+
+
+class MiClase
+  attr_accessor :x
+  def m1(x, y)
+    x + y
+  end
+  def m2(x)
+    @x = x
+  end
+  def m3(x)
+    @x = x
+  end
+end
+
+class MiOtraClase
+  attr_accessor :x
+  def m1(x, y)
+    x - y
+  end
+end
+
+Aspects.on MiClase do
+  transform(where name(/m1/)) do
+    before do |instance, cont, *args|
+      @x = 10
+      new_args = args.map{ |arg| arg * 10 }
+      cont.call(self, nil, *new_args)
+    end
+  end
+  #transform(where name(/m2/)) do
+  #  after do |instance, *args|
+  #    if @x > 100
+  #      2 * @x
+  #    else
+  #      @x
+  #    end
+  #  end
+  #end
+  #transform(where name(/m3/)) do
+  #  instead_of do |instance, *args|
+  #    @x = 123
+  #  end
+  #end
+end
+
+instancia = MiClase.new
+puts instancia.m1(1, 3)
+# 30
+puts instancia.x
+# 10
+
+#instancia = MiClase.new
+#instancia.m2(10)
+## 10
+#instancia.m2(200)
+## 400
+
+#instancia = MiClase.new
+#instancia.m3(10)
+#instancia.x
+## 123
