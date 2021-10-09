@@ -6,10 +6,21 @@ end
 
 module Has_Parameters
   def has_parameters(*args)
-    puts self.origen.class
+    # puts self.origen.class
     origenaux = self.origen.new
     if not(args.at(1).is_a?Regexp)
-    self.metodos.select{|un_metodo| origenaux.method(un_metodo).arity == args.at(0)}
+      self.metodos.select do |un_metodo|
+        origenaux.method(un_metodo).parameters.size == args.at(0)
+=begin
+        if(args.at(1).equal?("mandatory"))
+          origenaux.method(un_metodo).parameters.select do |un_parametro|
+            puts un_parametro
+          end
+        end
+=end
+  #      puts origenaux.method(un_metodo).arity == args.at(0)
+      end
+
     end
   end
 end
@@ -98,10 +109,10 @@ class Pepe
 end
 
 class MiClase
-  def foo(param1,param2)
+  def foo(param1,param2='v')
   end
 
-  def bar(param1,param2)
+  def bar(param1,param2='a')
   end
 end
 
@@ -114,5 +125,5 @@ end
 =end
 
 Aspects.on MiClase do
-  where name(/fo{2}/), name(/foo/), has_parameters(2,"mandatory")
+  where name(/fo{2}/), name(/foo/), has_parameters(2,"optional")
 end
