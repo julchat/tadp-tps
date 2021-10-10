@@ -28,5 +28,23 @@ describe 'TEST AspectsModificado' do
 
     expect(Aspects.on(Juan).include?(:saludar))
   end
+  it 'probar inyeccion de parametros' do
+    Aspects.on MiClase do
+      transform(where has_parameters(2, /p2/)) do
+        inject(p2: 'bar')
+      end
+    end
 
+    instancia = MiClase.new
+    #instancia.hace_algo("foo")
+    # "foo-bar"
+
+    # "foo-bar"
+
+    expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
+    expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar-foo")
+    # "bar:foo"
+    expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
+    end
 end
+

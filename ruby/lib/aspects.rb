@@ -1,5 +1,44 @@
-class Aspects
+module Inject
+  def inject(hash)
+    hash do | clave,valor |
+      @metodos_filtrados.parameters.each do
+        |req,param|
+        if hash.key? (param)
+          case hash[:param]
+          when Proc
+            param=hash[:param].call
+          else
+            param=hash[:param]
+          end
+        end
+      end
+    end
+  end
+end
 
+module Has_Parameters
+  def has_parameters(*args)
+    puts self.origen.class
+    origenaux = self.origen.new
+    if not(args.at(1).is_a?Regexp)
+      self.metodos.select{|un_metodo| origenaux.method(un_metodo).arity == args.at(0)}
+    end
+  end
+end
+
+class MiClase
+  def hace_algo(p1, p2)
+    p1 + '-' + p2
+  end
+  def hace_otra_cosa(p2, ppp)
+    p2 + ':' + ppp
+  end
+end
+
+
+
+class Aspects
+  include Inject
   def self.on(*argumentos,&bloque)
     clases_modulos_encontrados = [] # lista que almacena (si es que existen) las clases/modulos/objetos pasados por parametro
 
@@ -31,8 +70,8 @@ class Aspects
 end
 
 class Origen
-  attr_accessor :origen, :metodos
-
+  attr_accessor :origen, :metodos, :metodos_filtrados
+  include Inject
   def initialize(origennuevo)
     metodos = Array.new
     self.origen = origennuevo
@@ -48,6 +87,14 @@ class Origen
     self
   end
 
+  def where(*args)
+    args.reduce(args.at(0)) { |listas_concatenadas, lista| lista & listas_concatenadas }
+  end
+  def transform(metodos_filtrados, &bloque)
+    @metodos_filtrados = metodos_filtrados
+    instance_eval(&bloque)
+    end
+
   def get_origen_posta
     if origen.is_a? Symbol
       origenposta = (Kernel.const_get (origen.to_s))
@@ -57,6 +104,9 @@ class Origen
   origenposta
 end
 end
+
+
+
 
 class Pepe
   def ir_al_banio
@@ -73,8 +123,5 @@ puts Aspects.on /Pepe/, Juan do
 end
 
 
-miPepe = Pepe.new
-
-puts Aspects.on miPepe do end
 
 
