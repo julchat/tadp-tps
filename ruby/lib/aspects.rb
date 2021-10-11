@@ -48,18 +48,46 @@ module Neg
 end
 
 module Inject
-  def inject(hash)
-    hash do | clave,valor |
-      @metodos_filtrados.parameters.each do
-      |req,param|
-        if hash.key? (param)
-          case hash[:param]
+  def inject(un_hash)
+    @metodos_filtrados.each do |metodo_filtrado|
+      parametros_nuevos = []
+      @origen.new.method(metodo_filtrado.to_sym).parameters.each do |parametro|
+
+        parametro_nuevo = { es_nuevo: false, valor: nil}
+
+        if un_hash.key? parametro[1]
+          case un_hash[parametro[1]]
           when Proc
-            param=hash[:param].call
+            param = un_hash[parametro[1]] #.call
           else
-            param=hash[:param]
+            param = un_hash[parametro[1]]
+          end
+
+          parametro_nuevo[:es_nuevo] = true
+          parametro_nuevo[:valor] = param
+        end
+
+        parametros_nuevos.push(parametro_nuevo)
+      end
+
+      bloque_metodo = @origen.new.method(metodo_filtrado.to_sym).to_proc
+      @origen.define_method(metodo_filtrado.to_sym) do |*args|
+        if parametros_nuevos.size > args.size
+          args.concat(Array.new(parametros_nuevos.size - args.size))
+        end
+
+        nuevo_args = args.map.with_index do |x,i|
+          if parametros_nuevos[i][:es_nuevo]
+            if parametros_nuevos[i][:valor].is_a? Proc
+              parametros_nuevos[i][:valor].call(@origen,metodo_filtrado,x)
+            else
+              parametros_nuevos[i][:valor]
+            end
+          else
+            x
           end
         end
+        bloque_metodo.call(*nuevo_args)
       end
     end
   end
