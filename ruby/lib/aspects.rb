@@ -32,7 +32,7 @@ module Has_Parameters
         parametros = parametros.select{ |un_parametro| args.at(1).match?(un_parametro.at(1).to_s)}
       end
 
-      parametros.map { |un_parametro_par_ordenado| un_parametro_par_ordenado.at(1)}.size == args.at(0)
+      parametros.size == args.at(0)
     end
   end
 end

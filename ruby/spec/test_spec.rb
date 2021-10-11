@@ -85,7 +85,7 @@ describe 'TEST Aspects' do
     Aspects.on Juan do
       claseTest.metodosTest = where has_parameters(1)
     end
-    expect(claseTest.metodosTest).to eq([:saludar])
+    expect(claseTest.metodosTest.select{|un_metodo| un_metodo.equal? :saludar}).to eq([:saludar])
   end
 
   it "La ClaseA ejecuta el metodo saludar de la ClaseB" do
