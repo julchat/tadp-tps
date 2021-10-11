@@ -87,18 +87,36 @@ module InyeccionLogica
       @origen.define_method("#{metodo_filtrado}_before".to_sym) do |instancia,cont,*args|
         send("#{metodo_filtrado}_super_before".to_sym,*args)
       end
-    end
 
-    metodo = @origen.new.method(:m1_before)
+      metodo = @origen.new.method("#{metodo_filtrado}_before".to_sym) # "algo".to_sym => :algo
 
-    @metodos_filtrados.each do |metodo_filtrado|
       @origen.define_method("#{metodo_filtrado}".to_sym) do |*args|
-        instance_exec(@origen,metodo,*args,&bloque)
-        #bloque.call(@origen,metodo,*args)
+        instance_exec(@origen,metodo,*args,&bloque) # Siempre el bloque al final
+        #            (instance, cont, *args) correponden a los parametros del '&bloque'
+      end
+    end
+  end
+
+  def after(&bloque)
+    @metodos_filtrados.each do |metodo_filtrado|
+      @origen.alias_method "#{metodo_filtrado}_after".to_sym, metodo_filtrado.to_sym
+      @origen.define_method("#{metodo_filtrado}".to_sym) do |*args|
+        send("#{metodo_filtrado}_after".to_sym,*args)
+        instance_exec(@origen,*args,&bloque) # Siempre el bloque al final
+      end
+    end
+  end
+
+  def instead_of(&bloque)
+    @metodos_filtrados.each do |metodo_filtrado|
+      @origen.alias_method "#{metodo_filtrado}_instead_of".to_sym, metodo_filtrado.to_sym
+      @origen.define_method("#{metodo_filtrado}".to_sym) do |*args|
+        instance_exec(@origen,*args,&bloque) # Siempre el bloque al final
       end
     end
   end
 end
+
 
 class Aspects
 
