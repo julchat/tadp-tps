@@ -1,22 +1,49 @@
+module Properties
+  def mandatory
+    1
+  end
+  def optional
+    2
+  end
+end
+
 module Name
   def name(*args)
-    self.metodos.select{|un_metodo| args.at(0).match?(un_metodo.to_s)}
+   proc do |un_metodo|
+      args.at(0).match?(un_metodo.to_s)
+    end
   end
 end
 
 module Has_Parameters
+  include Properties
   def has_parameters(*args)
-    puts self.origen.class
-    origenaux = self.origen.new
-    if not(args.at(1).is_a?Regexp)
-      self.metodos.select{|un_metodo| origenaux.method(un_metodo).arity == args.at(0)}
+    proc do |metodo, un_origen|
+      parametros = un_origen.method(metodo).parameters
+      if(args.at(1) == mandatory)
+        parametros = parametros.select{ |un_parametro| un_parametro.at(0).to_s == "req"}
+      end
+
+      if(args.at(1) == optional)
+        parametros = parametros.select{ |un_parametro| un_parametro.at(0).to_s == "opt"}
+      end
+
+      if(args.at(1).is_a? Regexp)
+        parametros = parametros.select{ |un_parametro| args.at(1).match?(un_parametro.at(1).to_s)}
+      end
+
+      parametros.map { |un_parametro_par_ordenado| un_parametro_par_ordenado.at(1)}.size == args.at(0)
     end
   end
 end
 
 module Neg
   def neg(*args)
-
+    proc do |un_metodo, origen|
+      args.none? do |una_condicion|
+        una_condicion.call(un_metodo, origen)
+      end
+    end
   end
 end
 
@@ -52,9 +79,7 @@ module InyeccionLogica
         #bloque.call(@origen,metodo,*args)
       end
     end
-
   end
-
 end
 
 class Aspects
@@ -84,7 +109,7 @@ class Aspects
 end
 
 class Origen
-  attr_accessor :origen, :metodos, :metodos_filtrados
+  attr_accessor :origen, :metodos
   include Name
   include Has_Parameters
   include Neg
@@ -92,10 +117,9 @@ class Origen
   include InyeccionLogica
 
   def initialize(origennuevo)
-    metodos = Array.new
+    self.metodos = Array.new
     self.origen = get_origen_posta origennuevo
-    self.metodos = instance_exec origen do
-    |origenaevaluar|
+    self.metodos = instance_exec origen do |origenaevaluar|
       if origenaevaluar.is_a? Class
         origenaevaluar.instance_methods
       else
@@ -106,7 +130,12 @@ class Origen
   end
 
   def where(*args)
-    args.reduce(args.at(0)) { |listas_concatenadas, lista| lista & listas_concatenadas }
+    if self.origen.is_a? Class
+      origen_alterado = self.origen.new
+    else
+      origen_alterado = self.origen
+    end
+    puts self.metodos.select { |un_metodo| args.all?{ |una_condicion| una_condicion.call(un_metodo, origen_alterado)}}
   end
 
   def transform(metodos_filtrados, &bloque)
@@ -122,65 +151,3 @@ class Origen
     end
   end
 end
-
-
-class MiClase
-  attr_accessor :x
-  def m1(x, y)
-    x + y
-  end
-  def m2(x)
-    @x = x
-  end
-  def m3(x)
-    @x = x
-  end
-end
-
-class MiOtraClase
-  attr_accessor :x
-  def m1(x, y)
-    x - y
-  end
-end
-
-Aspects.on MiClase do
-  transform(where name(/m1/)) do
-    before do |instance, cont, *args|
-      @x = 10
-      new_args = args.map{ |arg| arg * 10 }
-      cont.call(self, nil, *new_args)
-    end
-  end
-  #transform(where name(/m2/)) do
-  #  after do |instance, *args|
-  #    if @x > 100
-  #      2 * @x
-  #    else
-  #      @x
-  #    end
-  #  end
-  #end
-  #transform(where name(/m3/)) do
-  #  instead_of do |instance, *args|
-  #    @x = 123
-  #  end
-  #end
-end
-
-instancia = MiClase.new
-puts instancia.m1(1, 3)
-# 30
-puts instancia.x
-# 10
-
-#instancia = MiClase.new
-#instancia.m2(10)
-## 10
-#instancia.m2(200)
-## 400
-
-#instancia = MiClase.new
-#instancia.m3(10)
-#instancia.x
-## 123
