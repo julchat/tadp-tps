@@ -63,21 +63,34 @@ describe 'TEST Aspects' do
 
 
     Aspects.on MiClase do
-      transform(where has_parameters(2, /p2/)) do
+      transform(where name(/hace/)) do
         inject(p2: 'bar')
       end
     end
 
     instancia = MiClase.new
-    #instancia.hace_algo("foo")
-    # "foo-bar"
 
-    # "foo-bar"
-
+    expect(instancia.hace_algo("foo")).to eq("foo-bar")
     expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
-    #expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar-foo")
-    # "bar:foo"
-    #expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
+    expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar:foo")
+  end
+
+  it 'inyeccion de parametros con un proc' do
+    class MiClase
+      def hace_algo(p1, p2)
+        p1 + "-" + p2
+      end
+    end
+
+    Aspects.on MiClase do
+      transform(where name(/hace/)) do
+        inject(p2: proc{ |receptor, mensaje, arg_anterior|
+          "bar(#{mensaje}->#{arg_anterior})"
+        })
+      end
+    end
+
+    expect(MiClase.new.hace_algo('foo', 'foo')).to eq('foo-bar(hace_algo->foo)')
   end
 
   it "Inyeccion Logica: BEFORE/AFTER/INSTEAD OF" do
