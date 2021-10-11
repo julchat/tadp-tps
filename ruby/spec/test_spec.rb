@@ -51,4 +51,33 @@ describe 'TEST Aspects' do
     expect(ClaseA.new.saludar("mundo")).to eq("Adiosín, mundo")
   end
 
+  it 'probar inyeccion de parametros' do
+    class MiClase
+      def hace_algo(p1, p2)
+        p1 + '-' + p2
+      end
+      def hace_otra_cosa(p2, ppp)
+        p2 + ':' + ppp
+      end
+    end
+
+
+    Aspects.on MiClase do
+      transform(where has_parameters(2, /p2/)) do
+        inject(p2: 'bar')
+      end
+    end
+
+    instancia = MiClase.new
+    #instancia.hace_algo("foo")
+    # "foo-bar"
+
+    # "foo-bar"
+
+    expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
+    #expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar-foo")
+    # "bar:foo"
+    #expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
+  end
+
 end

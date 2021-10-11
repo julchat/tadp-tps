@@ -47,6 +47,24 @@ module Neg
   end
 end
 
+module Inject
+  def inject(hash)
+    hash do | clave,valor |
+      @metodos_filtrados.parameters.each do
+      |req,param|
+        if hash.key? (param)
+          case hash[:param]
+          when Proc
+            param=hash[:param].call
+          else
+            param=hash[:param]
+          end
+        end
+      end
+    end
+  end
+end
+
 module RedirectTo
   def redirect_to(objeto)
     @metodos_filtrados.each do |metodo_filtrado|
@@ -113,6 +131,7 @@ class Origen
   include Name
   include Has_Parameters
   include Neg
+  include Inject
   include RedirectTo
   include InyeccionLogica
 
