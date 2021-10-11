@@ -35,9 +35,9 @@ end
 
 module Neg
   def neg(*args)
-     proc do |un_metodo|
+     proc do |un_metodo, origen|
       args.none? do |una_condicion|
-        una_condicion.call(un_metodo)
+        una_condicion.call(un_metodo, origen)
       end
     end
   end
