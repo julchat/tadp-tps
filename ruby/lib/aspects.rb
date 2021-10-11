@@ -7,6 +7,11 @@ module Properties
   end
 end
 
+
+=begin
+To do: para has_parameters y name no utilizar *args, si no pensar que argumentos podrian ser.
+=end
+
 module Name
   def name(*args)
     proc do |un_metodo|
@@ -56,13 +61,7 @@ module Inject
         parametro_nuevo = { es_nuevo: false, valor: nil}
 
         if un_hash.key? parametro[1]
-          case un_hash[parametro[1]]
-          when Proc
-            param = un_hash[parametro[1]] #.call
-          else
-            param = un_hash[parametro[1]]
-          end
-
+          param = un_hash[parametro[1]]
           parametro_nuevo[:es_nuevo] = true
           parametro_nuevo[:valor] = param
         end
@@ -87,7 +86,7 @@ module Inject
             x
           end
         end
-        bloque_metodo.call(*nuevo_args)
+        bloque_metodo.call(*nuevo_args) # Podria necesitar contexto de la instancia o de la clase para el bloque?
       end
     end
   end
@@ -194,6 +193,9 @@ class Origen
     self
   end
 
+=begin
+  evaluar ya usar los metodos del origen
+=end
   def where(*args)
     if self.origen.is_a? Class
       origen_alterado = self.origen.new
