@@ -85,7 +85,7 @@ describe 'TEST Aspects' do
     Aspects.on Juan do
       claseTest.metodosTest = where has_parameters(1)
     end
-    expect(claseTest.metodosTest).to eq ([:saludar])
+    expect(claseTest.metodosTest).to eq([:saludar])
   end
 
   it "La ClaseA ejecuta el metodo saludar de la ClaseB" do
@@ -120,15 +120,15 @@ describe 'TEST Aspects' do
       end
     end
 
-
     Aspects.on MiClase do
-      transform(where has_parameters(2, /p/)) do
+      transform(where has_parameters(1, /p2/)) do
         inject(p2: 'bar')
       end
     end
 
     instancia = MiClase.new
 
+    expect(instancia.hace_algo("foo")).to eq("foo-bar")
     expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
     expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar:foo")
   end
@@ -141,7 +141,7 @@ describe 'TEST Aspects' do
     end
 
     Aspects.on MiClase do
-      transform(where has_parameters(2,/p2/)) do
+      transform(where has_parameters(1,/p2/)) do
         inject(p2: proc{ |receptor, mensaje, arg_anterior|
           "bar(#{mensaje}->#{arg_anterior})"
         })
