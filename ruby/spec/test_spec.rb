@@ -1,5 +1,33 @@
 describe 'TEST Aspects' do
 
+  class MiClase
+    def foo
+    end
+
+    def bar
+    end
+  end
+
+  class MiClaseConParametros
+    def foo(p1, p2, p3, p4='a', p5='b', p6='c')
+    end
+    def bar(p1, p2='a', p3='b', p4='c')
+    end
+    def fooParam(param1, param2)
+    end
+    def barParam(param1)
+    end
+
+
+  end
+
+
+  class ClaseTest
+    attr_accessor :metodosTest
+  end
+
+  claseTest = ClaseTest.new
+
   it 'Debe tener al menos 1 argumento' do
     # Los Procedimientos van con {} osea no estoy esperando algo como un return. si puedo capturar un raise
     expect{Aspects.on {}}.to raise_error(ArgumentError)
@@ -10,27 +38,6 @@ describe 'TEST Aspects' do
                 end}.to raise_error(ArgumentError)
   end
 
-=begin
-  it 'Pepe existe pero Juan no, pero no hay excepcion' do
-    class Pepe
-
-    end
-
-    expect(Aspects.on /Pepe/, /Juan/, {}).to eq("Exito")
-  end
-
-  it "Voy a operar sobre saludar, porque juancito tiene el metodo"do
-    class Juan
-      def saludar
-        "hola"
-      end
-    end
-    juancito = Juan.new
-
-    expect(Aspects.on(Juan).include?(:saludar))
-  end
-=end
-
   it "Machear el nombre del metodo" do
     class Juan
       def saludar
@@ -42,50 +49,67 @@ describe 'TEST Aspects' do
       attr_accessor :metodosTest
     end
 
-    claseTest = ClaseTest.new
     Aspects.on Juan do
       claseTest.metodosTest = where name(/saludar/)
     end
     expect(claseTest.metodosTest).to eq ([:saludar])
   end
 
-  it "Machear el nombre del metodo" do
-    class MiClase
-      def foo
-      end
+  it "Machear el nombre del metodo, con 2 names" do
 
-      def bar
-      end
-    end
-
-    class ClaseTest
-      attr_accessor :metodosTest
-    end
-
-    claseTest = ClaseTest.new
-
+    claseTest.metodosTest = Array.new
     Aspects.on MiClase do
       claseTest.metodosTest = where name(/fo{2}/), name(/fo/)
     end
     expect(claseTest.metodosTest).to eq ([:foo])
   end
 
+  it "No machea el nombre del metodo con name" do
+
+    claseTest.metodosTest = Array.new
+    Aspects.on MiClase do
+      claseTest.metodosTest = where name(/^fi+/)
+    end
+    expect(claseTest.metodosTest).to eq ([])
+  end
+
+  it "No machea el nombre del metodo con dos name" do
+
+    claseTest.metodosTest = Array.new
+    Aspects.on MiClase do
+      claseTest.metodosTest = where name(/foo/), name(/bar/)
+    end
+    expect(claseTest.metodosTest).to eq ([])
+  end
+
+  it "Metodos con la misma cantidad de parametros y ademas que sean obligatorios" do
+
+    claseTest.metodosTest=Array.new
+
+    Aspects.on MiClaseConParametros do
+      claseTest.metodosTest = where has_parameters(3, mandatory)
+    end
+    expect(claseTest.metodosTest).to eq([:foo])
+  end
+
   it "Metodos con la misma cantidad de parametros" do
-    class Juan
-      def saludar(name)
-        "hola #{name}"
-      end
-    end
 
-    class ClaseTest
-      attr_accessor :metodosTest
-    end
+    claseTest.metodosTest=Array.new
 
-    claseTest = ClaseTest.new
-    Aspects.on Juan do
-      claseTest.metodosTest = where has_parameters(1)
+    Aspects.on MiClaseConParametros do
+      claseTest.metodosTest = where has_parameters(6)
     end
-    expect(claseTest.metodosTest.select{|un_metodo| un_metodo.equal? :saludar}).to eq([:saludar])
+    expect(claseTest.metodosTest).to eq([:foo])
+  end
+
+  it "Metodos con la misma cantidad de parametros opcionales" do
+
+    claseTest.metodosTest=Array.new
+
+    Aspects.on MiClaseConParametros do
+      claseTest.metodosTest = where has_parameters(3, optional)
+    end
+    expect(claseTest.metodosTest).to eq([:foo,:bar])
   end
 
   it "La ClaseA ejecuta el metodo saludar de la ClaseB" do
