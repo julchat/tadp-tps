@@ -109,7 +109,7 @@ class Aspects
 end
 
 class Origen
-  attr_accessor :origen, :metodos
+  attr_accessor :origen, :metodos, :metodos_filtrados
   include Name
   include Has_Parameters
   include Neg
@@ -135,7 +135,7 @@ class Origen
     else
       origen_alterado = self.origen
     end
-    puts self.metodos.select { |un_metodo| args.all?{ |una_condicion| una_condicion.call(un_metodo, origen_alterado)}}
+    self.metodos.select { |un_metodo| args.all?{ |una_condicion| una_condicion.call(un_metodo, origen_alterado)}}
   end
 
   def transform(metodos_filtrados, &bloque)

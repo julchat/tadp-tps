@@ -1,4 +1,4 @@
-describe 'TEST AspectsModificado' do
+describe 'TEST Aspects' do
 
   it 'Debe tener al menos 1 argumento' do
     # Los Procedimientos van con {} osea no estoy esperando algo como un return. si puedo capturar un raise
