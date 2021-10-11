@@ -10,6 +10,7 @@ describe 'TEST Aspects' do
                 end}.to raise_error(ArgumentError)
   end
 
+=begin
   it 'Pepe existe pero Juan no, pero no hay excepcion' do
     class Pepe
 
@@ -27,6 +28,64 @@ describe 'TEST Aspects' do
     juancito = Juan.new
 
     expect(Aspects.on(Juan).include?(:saludar))
+  end
+=end
+
+  it "Machear el nombre del metodo" do
+    class Juan
+      def saludar
+        "hola"
+      end
+    end
+
+    class ClaseTest
+      attr_accessor :metodosTest
+    end
+
+    claseTest = ClaseTest.new
+    Aspects.on Juan do
+      claseTest.metodosTest = where name(/saludar/)
+    end
+    expect(claseTest.metodosTest).to eq ([:saludar])
+  end
+
+  it "Machear el nombre del metodo" do
+    class MiClase
+      def foo
+      end
+
+      def bar
+      end
+    end
+
+    class ClaseTest
+      attr_accessor :metodosTest
+    end
+
+    claseTest = ClaseTest.new
+
+    Aspects.on MiClase do
+      claseTest.metodosTest = where name(/fo{2}/), name(/fo/)
+    end
+    expect(claseTest.metodosTest).to eq ([:foo])
+  end
+
+  it "Metodos con la misma cantidad de parametros" do
+    class Juan
+      def saludar(name)
+        "hola #{name}"
+      end
+    end
+
+    class ClaseTest
+      attr_accessor :metodosTest
+    end
+
+    claseTest = ClaseTest.new
+    Aspects.on Juan do
+      claseTest.metodosTest = where has_parameters(1)
+    end
+    expect(claseTest.metodosTest).to eq ([:saludar])
   end
 
   it "La ClaseA ejecuta el metodo saludar de la ClaseB" do
@@ -63,14 +122,13 @@ describe 'TEST Aspects' do
 
 
     Aspects.on MiClase do
-      transform(where has_parameters(2, /p2/)) do
+      transform(where has_parameters(2, /p/)) do
         inject(p2: 'bar')
       end
     end
 
     instancia = MiClase.new
 
-    expect(instancia.hace_algo("foo")).to eq("foo-bar")
     expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
     expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar:foo")
   end

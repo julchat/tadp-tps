@@ -20,7 +20,6 @@ module Has_Parameters
   def has_parameters(*args)
     proc do |metodo, un_origen|
       parametros = un_origen.method(metodo).parameters
-      parametros_original = un_origen.method(metodo).parameters
       if(args.at(1) == mandatory)
         parametros = parametros.select{ |un_parametro| un_parametro.at(0).to_s == "req"}
       end
@@ -34,9 +33,7 @@ module Has_Parameters
       end
 
       if args.at(1).is_a? Regexp
-        parametros.size > 0 and parametros_original.size == args.at(0)
-      else
-        parametros.map { |un_parametro_par_ordenado| un_parametro_par_ordenado.at(1)}.size == args.at(0)
+        parametros.size == args.at(0)
       end
     end
   end
