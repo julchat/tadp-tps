@@ -51,7 +51,7 @@ describe 'TEST Aspects' do
     expect(ClaseA.new.saludar("mundo")).to eq("Adiosín, mundo")
   end
 
-  it 'probar inyeccion de parametros' do
+  it 'inyeccion de parametros normal' do
     class MiClase
       def hace_algo(p1, p2)
         p1 + '-' + p2
@@ -63,7 +63,7 @@ describe 'TEST Aspects' do
 
 
     Aspects.on MiClase do
-      transform(where name(/hace/)) do
+      transform(where has_parameters(2, /p2/)) do
         inject(p2: 'bar')
       end
     end
@@ -83,7 +83,7 @@ describe 'TEST Aspects' do
     end
 
     Aspects.on MiClase do
-      transform(where name(/hace/)) do
+      transform(where has_parameters(2,/p2/)) do
         inject(p2: proc{ |receptor, mensaje, arg_anterior|
           "bar(#{mensaje}->#{arg_anterior})"
         })
