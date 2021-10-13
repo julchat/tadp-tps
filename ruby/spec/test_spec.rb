@@ -157,6 +157,63 @@ describe 'TEST Aspects' do
     expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar:foo")
   end
 
+  it "Inyeccion Logica: BEFORE/AFTER/INSTEAD OF version module" do
+    module MiModule
+      attr_accessor :x
+      def m1(x, y)
+        x + y
+      end
+      def m2(x)
+        @x = x
+      end
+      def m3(x)
+        @x = x
+      end
+    end
+
+    Aspects.on MiModule do
+      transform(where name(/m1/)) do
+        before do |instance, cont, *args|
+          @x = 10
+          new_args = args.map{ |arg| arg * 10 }
+          cont.call(self, nil, *new_args)
+        end
+      end
+
+      transform(where name(/m2/)) do
+        after do |instance, *args|
+          if @x > 100
+            2 * @x
+          else
+            @x
+          end
+        end
+      end
+
+      transform(where name(/m3/)) do
+        instead_of do |instance, *args|
+          @x = 123
+        end
+      end
+    end
+
+    class MiClase2
+      include MiModule
+    end
+
+    instancia = MiClase2.new
+    expect(instancia.m1(1, 2)).to eq(30)
+    expect(instancia.x).to eq(10)
+
+    instancia = MiClase2.new
+    expect(instancia.m2(10)).to eq(10)
+    expect(instancia.m2(200)).to eq(400)
+
+    instancia = MiClase2.new
+    instancia.m3(10)
+    expect(instancia.x).to eq(123)
+  end
+
   it 'inyeccion de parametros con un proc' do
     class MiClase
       def hace_algo(p1, p2)
