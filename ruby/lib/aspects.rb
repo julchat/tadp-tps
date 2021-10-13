@@ -5,48 +5,46 @@ module Properties
   def optional
     2
   end
+  def ambos
+    3
+  end
 end
 
-
-=begin
-To do: para has_parameters y name no utilizar *args, si no pensar que argumentos podrian ser.
-=end
-
 module Name
-  def name(*args)
+  def name(nombre)
     proc do |un_metodo|
-      args.at(0).match?(un_metodo.to_s)
+      nombre.match?(un_metodo.to_s)
     end
   end
 end
 
 module Has_Parameters
   include Properties
-  def has_parameters(*args)
-    proc do |metodo, un_origen|
-      parametros = un_origen.method(metodo).parameters
-      if(args.at(1) == mandatory)
+  def has_parameters(cantidad, criterio = ambos)
+    proc do |metodo|
+      parametros = @origen.instance_method(metodo).parameters
+      if(criterio == mandatory)
         parametros = parametros.select{ |un_parametro| un_parametro.at(0).to_s == "req"}
       end
 
-      if(args.at(1) == optional)
+      if(criterio == optional)
         parametros = parametros.select{ |un_parametro| un_parametro.at(0).to_s == "opt"}
       end
 
-      if(args.at(1).is_a? Regexp)
-        parametros = parametros.select{ |un_parametro| args.at(1).match?(un_parametro.at(1).to_s)}
+      if(criterio.is_a? Regexp)
+        parametros = parametros.select{ |un_parametro| criterio.match?(un_parametro.at(1).to_s)}
       end
 
-      parametros.size == args.at(0)
+      parametros.size == cantidad
     end
   end
 end
 
 module Neg
   def neg(*args)
-    proc do |un_metodo, origen|
+    proc do |un_metodo|
       args.none? do |una_condicion|
-        una_condicion.call(un_metodo, origen)
+        una_condicion.call(un_metodo)
       end
     end
   end
@@ -56,7 +54,7 @@ module Inject
   def inject(un_hash)
     @metodos_filtrados.each do |metodo_filtrado|
       parametros_nuevos = []
-      @origen.new.method(metodo_filtrado.to_sym).parameters.each do |parametro|
+      @origen.instance_method(metodo_filtrado.to_sym).parameters.each do |parametro|
 
         parametro_nuevo = { es_nuevo: false, valor: nil}
 
@@ -69,7 +67,8 @@ module Inject
         parametros_nuevos.push(parametro_nuevo)
       end
 
-      bloque_metodo = @origen.new.method(metodo_filtrado.to_sym).to_proc
+      metodo_nuevo = "#{metodo_filtrado}_original".to_sym
+      @origen.alias_method metodo_nuevo, metodo_filtrado.to_sym
       @origen.define_method(metodo_filtrado.to_sym) do |*args|
         if parametros_nuevos.size > args.size
           args.concat(Array.new(parametros_nuevos.size - args.size))
@@ -86,7 +85,7 @@ module Inject
             x
           end
         end
-        bloque_metodo.call(*nuevo_args) # Podria necesitar contexto de la instancia o de la clase para el bloque?
+        send(metodo_nuevo, *nuevo_args)
       end
     end
   end
@@ -98,11 +97,7 @@ module RedirectTo
       redireccion = proc do |*args|
         objeto.send(metodo_filtrado.to_sym,*args)
       end
-      if @origen.is_a? Class
         @origen.define_method(metodo_filtrado.to_sym,redireccion)
-      else
-        @origen.define_singleton_method(metodo_filtrado.to_sym,redireccion)
-      end
     end
   end
 end
@@ -115,10 +110,10 @@ module InyeccionLogica
         send("#{metodo_filtrado}_super_before".to_sym,*args)
       end
 
-      metodo = @origen.new.method("#{metodo_filtrado}_before".to_sym) # "algo".to_sym => :algo
+      metodo = @origen.instance_method("#{metodo_filtrado}_before".to_sym) # "algo".to_sym => :algo
 
       @origen.define_method("#{metodo_filtrado}".to_sym) do |*args|
-        instance_exec(@origen,metodo,*args,&bloque) # Siempre el bloque al final
+        instance_exec(@origen,metodo.bind(self),*args,&bloque) # Siempre el bloque al final
         #            (instance, cont, *args) correponden a los parametros del '&bloque'
       end
     end
@@ -172,7 +167,7 @@ class Aspects
 end
 
 class Origen
-  attr_accessor :origen, :metodos, :metodos_filtrados
+  attr_accessor :origen, :metodos_filtrados
   include Name
   include Has_Parameters
   include Neg
@@ -181,28 +176,12 @@ class Origen
   include InyeccionLogica
 
   def initialize(origennuevo)
-    self.metodos = Array.new
     self.origen = get_origen_posta origennuevo
-    self.metodos = instance_exec origen do |origenaevaluar|
-      if origenaevaluar.is_a? Class
-        origenaevaluar.instance_methods
-      else
-        origenaevaluar.singleton_class.instance_methods
-      end
-    end
     self
   end
 
-=begin
-  evaluar ya usar los metodos del origen
-=end
   def where(*args)
-    if self.origen.is_a? Class
-      origen_alterado = self.origen.new
-    else
-      origen_alterado = self.origen
-    end
-    self.metodos.select { |un_metodo| args.all?{ |una_condicion| una_condicion.call(un_metodo, origen_alterado)}}
+    self.origen.instance_methods.select { |un_metodo| args.all?{ |una_condicion| una_condicion.call(un_metodo)}}
   end
 
   def transform(metodos_filtrados, &bloque)
@@ -213,8 +192,25 @@ class Origen
   private def get_origen_posta (origenposta)
     if origenposta.is_a? Symbol
       (Kernel.const_get (origenposta.to_s))
-    else
-      origenposta
+      else if origenposta.is_a? Module
+        origenposta
+           else
+             origenposta.singleton_class
+      end
     end
   end
+end
+
+class Juan
+  def saludar
+    "hola"
+  end
+end
+
+class ClaseTest
+  attr_accessor :metodosTest
+end
+
+Aspects.on Juan do
+  ClaseTest.new.metodosTest = where name(/saludar/)
 end
