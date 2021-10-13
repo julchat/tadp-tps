@@ -157,6 +157,33 @@ describe 'TEST Aspects' do
     expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar:foo")
   end
 
+  it 'inyeccion de parametros normal version module' do
+    module MiModule
+      def hace_algo(p1, p2)
+        p1 + '-' + p2
+      end
+      def hace_otra_cosa(p2, ppp)
+        p2 + ':' + ppp
+      end
+    end
+
+    Aspects.on MiModule do
+      transform(where has_parameters(1, /p2/)) do
+        inject(p2: 'bar')
+      end
+    end
+
+    class MiClase2
+      include MiModule
+    end
+
+    instancia = MiClase2.new
+
+    expect(instancia.hace_algo("foo")).to eq("foo-bar")
+    expect(instancia.hace_algo("foo", "foo")).to eq("foo-bar")
+    expect(instancia.hace_otra_cosa("foo", "foo")).to eq("bar:foo")
+  end
+
   it "Inyeccion Logica: BEFORE/AFTER/INSTEAD OF version module" do
     module MiModule
       attr_accessor :x
@@ -230,6 +257,28 @@ describe 'TEST Aspects' do
     end
 
     expect(MiClase.new.hace_algo('foo', 'foo')).to eq('foo-bar(hace_algo->foo)')
+  end
+
+  it 'inyeccion de parametros con un proc version module' do
+    module MiModule
+      def hace_algo(p1, p2)
+        p1 + "-" + p2
+      end
+    end
+
+    Aspects.on MiModule do
+      transform(where has_parameters(1,/p2/)) do
+        inject(p2: proc{ |receptor, mensaje, arg_anterior|
+          "bar(#{mensaje}->#{arg_anterior})"
+        })
+      end
+    end
+
+    class MiClase2
+      include MiModule
+    end
+
+    expect(MiClase2.new.hace_algo('foo', 'foo')).to eq('foo-bar(hace_algo->foo)')
   end
 
   it "Inyeccion Logica: BEFORE/AFTER/INSTEAD OF" do
