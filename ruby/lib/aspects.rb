@@ -192,25 +192,11 @@ class Origen
   private def get_origen_posta (origenposta)
     if origenposta.is_a? Symbol
       (Kernel.const_get (origenposta.to_s))
-      else if origenposta.is_a? Module
+    else
+      if origenposta.is_a? Module
         origenposta
-           else
-             origenposta.singleton_class
+      else origenposta.singleton_class
       end
     end
   end
-end
-
-class Juan
-  def saludar
-    "hola"
-  end
-end
-
-class ClaseTest
-  attr_accessor :metodosTest
-end
-
-Aspects.on Juan do
-  ClaseTest.new.metodosTest = where name(/saludar/)
 end
