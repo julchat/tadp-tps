@@ -1,6 +1,6 @@
 package domain
 
-case class Grupo[T <: EstadoHeroe](val cofre: Cofre){
+case class Grupo[T <: EstadoHeroe](val cofre: Cofre){ //TODO: Mecanica del recorrido del laberinto
   def agregarABotin(item: Item) : Grupo[T] = this.copy(cofre = cofre.agregarItem(item));
   def map(funcion: T => T) : Grupo[T] = this.copy();
 }
@@ -48,6 +48,7 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
 }
 
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo){
+  //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
   def getFuerza() : Double = {
     val adicional : Double =
     trabajo match {

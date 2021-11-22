@@ -1,27 +1,27 @@
 package domain
 
 class Calabozo(){
-
+//TODO: Modelar como estarian las habitaciones y las puertas aca
 
 }
 
 
-trait Puerta{
+trait Puerta{ //TODO: Desarrollar las puertas
   val primeraHabitacion : Habitacion
   val segundaHabitacion : Option[Habitacion]
 
-  def puedoSerAbierta(grupo: Grupo): Boolean = condicionesParaAbrir.exists(condicion => condicion(grupo))
-  def condicionesParaAbrir : List[(Grupo => Boolean)]
+  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion(grupo))
+  def condicionesParaAbrir : List[(Grupo[EstadoHeroe] => Boolean)]
 }
 
 case class Abierta() extends Puerta{
 
-  override def puedoSerAbierta(grupo: Grupo): Boolean = false
+  override def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = false
 
 }
 
-case class Cerrada() extends Puerta {
-  override def condicionesParaAbrir : List[(Grupo => Boolean)]
+case class Cerrada() extends Puerta {//TODO: Aca hay que cambiar esto
+  override def condicionesParaAbrir : List[(Grupo[EstadoHeroe] => Boolean)]
   def condicion1 (grupo: Grupo) : (List[Boolean]) = {
     grupo.heroes.map(h => h.trabajo match
     {
@@ -37,7 +37,7 @@ case class Cerrada() extends Puerta {
   }
 }
 
-case class Habitacion(val situacion : Situacion){
+case class Habitacion(val situacion : Situacion){ //TODO: Terminar las habitaciones
   def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] ={
     situacion match{
       case NoPasaNada() => grupo;
