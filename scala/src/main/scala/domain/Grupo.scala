@@ -1,5 +1,52 @@
 package domain
 
+case class Grupo[T <: EstadoHeroe](val cofre: Cofre){
+  def agregarABotin(item: Item) : Grupo[T] = this.copy(cofre = cofre.agregarItem(item));
+  def map(funcion: T => T) : Grupo[T] = this.copy();
+}
+
+case class GrupoVivo[T <: EstadoHeroe](val heroes: List[T], val _cofre : Cofre) extends Grupo(_cofre) {
+   def cantidadDeMuertos() : Int  = {
+    heroes.filter({unHeroe => unHeroe.estoyVivo()}).length;
+  }
+  def getLider() : EstadoHeroe = {
+    heroes.find(_.estoyVivo).get;
+  }
+
+  override def map(funcion: T => T): Grupo[T] = this.copy(heroes = heroes.map(unHeroe => funcion.apply(unHeroe)));
+}
+
+case class GrupoMuerto[T <: EstadoHeroe](val _cofre : Cofre) extends Grupo(_cofre){
+
+}
+
+abstract case class EstadoHeroe(val heroe : Heroe){
+  def estoyVivo() : Boolean;
+  def perderVida(vidaAPerder : Int) : EstadoHeroe;
+}
+
+case class Vivo(val _heroe : Heroe) extends EstadoHeroe(_heroe) {
+  def estoyVivo() : Boolean = true;
+  override def perderVida(vidaAPerder : Int) : EstadoHeroe = {
+    if (_heroe.vidaResultante(vidaAPerder) > 0){
+      this.copy(_heroe = _heroe.bajarVida(vidaAPerder));
+    } else {
+      this.morir();
+    }
+  }
+
+  def morir() : EstadoHeroe = {
+    val nuevoHeroe : Heroe = _heroe.copy(saludActual = 0);
+    Muerto(_heroe = nuevoHeroe);
+  }
+}
+
+case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
+  def estoyVivo() : Boolean = false;
+
+  override def perderVida(vidaAPerder: Int): EstadoHeroe = ???
+}
+
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo){
   def getFuerza() : Double = {
     val adicional : Double =
@@ -9,8 +56,8 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }
   atributos.fuerzaBase + adicional
   }
-
-  def perderVida(vidaPerdida : Int) : Heroe = copy(saludActual = math.max(0, saludActual - vidaPerdida))
+  def vidaResultante (vidaAPerder : Int) : Int = math.max(0, saludActual - vidaAPerder);
+  def bajarVida (vidaPerdida : Int ) : Heroe = this.copy(saludActual = saludActual - vidaPerdida);
 }
 
 case class Atributos(val fuerzaBase : Int, val velocidadBase : Int, val saludBase : Int)
@@ -27,10 +74,10 @@ case class Hechizo(val nivelRequerido : Int, val nombre : String){
   }
 }
 
-case class Grupo(val heroes : List[Heroe], val cofre : Cofre){
-  def getLider : Heroe = heroes.find(h => h.saludActual > 0).get
+case class Cofre(val items : List[Item], val armas : List[String], val tesoroAcumulado : Int) {
+  def agregarItem(item: Item): Cofre = this.copy(items = items.appended(item));
+
 }
-case class Cofre(val items : List[Item], val armas : List[String], val tesoroAcumulado : Int)
 
 trait Item
 case object Ganzúas extends Item

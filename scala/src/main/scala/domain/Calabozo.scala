@@ -1,5 +1,11 @@
 package domain
 
+class Calabozo(){
+
+
+}
+
+
 trait Puerta{
   val primeraHabitacion : Habitacion
   val segundaHabitacion : Option[Habitacion]
@@ -30,4 +36,34 @@ case class Cerrada() extends Puerta {
 
   }
 }
+
+case class Habitacion(val situacion : Situacion){
+  def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] ={
+    situacion match{
+      case NoPasaNada() => grupo;
+      case TesoroPerdido(item) => grupo.agregarABotin(item);
+      case MuchosMuchosDardos() => grupo.map(unEstadoHeroe => unEstadoHeroe.perderVida(10));
+      case TrampaDeLeones() => grupo.agregarABotin(Llave);//Map no es del to-do util porque tenemos que analizar por to-do el conjunto
+                              //Hacer un fold o un reduce para conseguir al mas lento. Primero habria que filtrar los vivos
+                              //Dentro de la funcion del fold podria usarse para la comparacion que este vivo
+      case Encuentro(personalidad) => grupo //Map con aplicacion parcial para ver como se lleva con el lider?
+    }
+  }
+}
+
+trait Situacion;
+case class NoPasaNada() extends Situacion{
+}
+case class TesoroPerdido(val item: Item){
+}
+case class MuchosMuchosDardos(){
+
+}
+case class TrampaDeLeones(){
+
+}
+
+case class Encuentro(val personalidad : (Grupo[EstadoHeroe] => Boolean));
+
+
 
