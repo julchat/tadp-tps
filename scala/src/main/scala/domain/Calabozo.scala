@@ -6,7 +6,9 @@ case class Calabozo(puertaPrincipal: Puerta){
   }
 }
 
-case class Puerta(habitacion: Habitacion, obstaculo: Obstaculo)
+case class Puerta(habitacion: Habitacion, obstaculo: Obstaculo){
+
+}
 
 trait Obstaculo
 case object Cerrada extends Obstaculo

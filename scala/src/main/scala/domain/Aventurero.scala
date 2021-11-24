@@ -1,10 +1,12 @@
 package domain
 
 case class Aventurero(atributos: Atributos, nivel:Int, salud: Int, trabajo: Trabajo){
-  def fuerza(): Int = trabajo match {
+  def fuerza: Int = trabajo match {
     case Guerrero => atributos.fuerza + (atributos.fuerza * ((0.2 * nivel) + 1).toInt)
     case _ => atributos.fuerza
   }
+
+  def estaVivo: Boolean = salud > 0
 }
 
 case class Atributos(fuerza: Int,velocidad: Int)
