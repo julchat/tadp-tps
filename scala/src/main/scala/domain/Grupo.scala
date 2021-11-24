@@ -3,6 +3,8 @@ package domain
 case class Grupo[T <: EstadoHeroe](val cofre: Cofre){ //TODO: Mecanica del recorrido del laberinto
   def agregarABotin(item: Item) : Grupo[T] = this.copy(cofre = cofre.agregarItem(item));
   def map(funcion: T => T) : Grupo[T] = this.copy();
+
+  def masLento() : EstadoHeroe;
 }
 
 case class GrupoVivo[T <: EstadoHeroe](val heroes: List[T], val _cofre : Cofre) extends Grupo(_cofre) {
@@ -12,17 +14,22 @@ case class GrupoVivo[T <: EstadoHeroe](val heroes: List[T], val _cofre : Cofre) 
   def getLider() : EstadoHeroe = {
     heroes.find(_.estoyVivo).get;
   }
-
+  def masLento() :EstadoHeroe = {
+    var menor = getLider()
+    heroes.foreach( h => if (h.getVelocidad() <  menor.getVelocidad() ){menor = h})
+    menor
+  }
   override def map(funcion: T => T): Grupo[T] = this.copy(heroes = heroes.map(unHeroe => funcion.apply(unHeroe)));
 }
 
 case class GrupoMuerto[T <: EstadoHeroe](val _cofre : Cofre) extends Grupo(_cofre){
-
+  def masLento() : EstadoHeroe= ???
 }
 
 abstract case class EstadoHeroe(val heroe : Heroe){
   def estoyVivo() : Boolean;
   def perderVida(vidaAPerder : Int) : EstadoHeroe;
+  def matarCondicion(condicion: EstadoHeroe): EstadoHeroe;
 }
 
 case class Vivo(val _heroe : Heroe) extends EstadoHeroe(_heroe) {
@@ -39,12 +46,21 @@ case class Vivo(val _heroe : Heroe) extends EstadoHeroe(_heroe) {
     val nuevoHeroe : Heroe = _heroe.copy(saludActual = 0);
     Muerto(_heroe = nuevoHeroe);
   }
+
+  def getVelocidad() : Int = _heroe.atributos.velocidadBase;
+  def matarCondicion(condicion: EstadoHeroe): EstadoHeroe ={
+    if (this == condicion) {
+      this.morir()
+    }else
+      this.copy()
+  }
 }
 
 case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
   def estoyVivo() : Boolean = false;
 
   override def perderVida(vidaAPerder: Int): EstadoHeroe = ???
+  def matarCondicion(condicion: EstadoHeroe) : EstadoHeroe = ???
 }
 
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo){
