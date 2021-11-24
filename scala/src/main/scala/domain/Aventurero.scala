@@ -23,3 +23,4 @@ case class Invisibilidad(nivelRequerido: Int)
 case class Grupo(heroes: List[Aventurero], cofre: List[Item])
 
 trait Item
+case object Llave extends Item

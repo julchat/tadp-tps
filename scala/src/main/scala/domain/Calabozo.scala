@@ -1,8 +1,8 @@
 package domain
 
 case class Calabozo(puertaPrincipal: Puerta){
-  def recorrer(grupo: Grupo) = {
-
+  def recorrer(grupo: Grupo): Grupo = puertaPrincipal.obstaculo match {
+    case Cerrada => grupo.cofre.find()
   }
 }
 
