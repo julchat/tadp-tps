@@ -11,7 +11,7 @@ case class Grupo[T <: EstadoHeroe](val cofre: Cofre){ //TODO: Mecanica del recor
 
 case class GrupoVivo[T <: EstadoHeroe](val heroes: List[T], val _cofre : Cofre) extends Grupo(_cofre) {
   def cantidadDeMuertos() : Int  = {
-    heroes.filter({unHeroe => unHeroe.estoyVivo()}).length;
+    heroes.count { unHeroe => !unHeroe.estoyVivo() };
   }
   def cantidadDeVivos() : Int  = {
     heroes.length - cantidadDeMuertos();
@@ -99,6 +99,7 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
 
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo,val compatibilidad : Compatibilidad){
   //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
+
   def getFuerza() : Double = {
     val adicional : Double =
     trabajo match {
