@@ -6,26 +6,45 @@ case class Grupo[T <: EstadoHeroe](val cofre: Cofre){ //TODO: Mecanica del recor
 
   def masLento() : EstadoHeroe;
   def fuerzaTotal() : Int;
+  def pelear(heroeExtranjero : EstadoHeroe) : Grupo[EstadoHeroe];
 }
 
 case class GrupoVivo[T <: EstadoHeroe](val heroes: List[T], val _cofre : Cofre) extends Grupo(_cofre) {
-   def cantidadDeMuertos() : Int  = {
+  def cantidadDeMuertos() : Int  = {
     heroes.filter({unHeroe => unHeroe.estoyVivo()}).length;
   }
-  def getLider() : EstadoHeroe = {
-    heroes.find(_.estoyVivo).get;
+  def cantidadDeVivos() : Int  = {
+    heroes.length - cantidadDeMuertos();
   }
+  def getLider() : EstadoHeroe = heroes.find(_.estoyVivo).get;
+
   def masLento() :EstadoHeroe = {
     var menor = getLider()
     heroes.foreach( h => if (h.getVelocidad() <  menor.getVelocidad() ){menor = h})
     menor
   }
   // TODO : Se usa para enfrentar al heroe si no es compatible
-  def fuerzaTotal() :Int = {
+  override def fuerzaTotal() :Int = {
     var sum = 0
     heroes.foreach(sum += _.getFuerza())
     sum
   }
+
+  // ENCUENTRO ------------------------------------------
+  def pelear(heroeExtranjero : EstadoHeroe): Grupo[EstadoHeroe] = {
+    val fuerzaDelExtranjero = heroeExtranjero.getFuerza()
+    if (fuerzaTotal() > fuerzaDelExtranjero){
+      this.copy(heroes = heroes.map(h => h.subirNivel(1)) )
+    }
+    else{
+      // Todos los integrantes(vivos) pierden vida igualitariamente
+      this.copy(heroes = heroes.map(h => h.perderVida( (fuerzaDelExtranjero / cantidadDeVivos()).toInt) ))
+    }
+  }
+  // FUNCIONES PARA COMPATIBILIDAD DEL ENCUENTRO
+  def hayLadrones() : Boolean =  heroes.exists(h => h.esLadron())
+  def contieneItem(unItem : Item) : Boolean = _cofre.contieneItem(unItem)
+
   override def map(funcion: T => T): Grupo[T] = this.copy(heroes = heroes.map(unHeroe => funcion.apply(unHeroe)));
 }
 
@@ -40,6 +59,8 @@ abstract case class EstadoHeroe(val heroe : Heroe){
   def matarCondicion(condicion: EstadoHeroe): EstadoHeroe;
   def getVelocidad() : Int;
   def getFuerza() : Double;
+  def subirNivel(niveles : Int) : EstadoHeroe;
+  def esLadron() : Boolean;
 }
 
 case class Vivo(val _heroe : Heroe) extends EstadoHeroe(_heroe) {
@@ -64,6 +85,8 @@ case class Vivo(val _heroe : Heroe) extends EstadoHeroe(_heroe) {
     }else
       this.copy()
   }
+  def esLadron() = _heroe.esLadron();
+  def subirNivel(niveles : Int) :EstadoHeroe = this.copy(_heroe.subirNivel(niveles)); // o bien _heroe = ***
 }
 
 case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
@@ -71,9 +94,10 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
 
   override def perderVida(vidaAPerder: Int): EstadoHeroe = ???
   def matarCondicion(condicion: EstadoHeroe) : EstadoHeroe = ???
+  def subirNivel(niveles : Int) :EstadoHeroe = ???
 }
 
-case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo){
+case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo,val compatibilidad : Compatibilidad){
   //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
   def getFuerza() : Double = {
     val adicional : Double =
@@ -85,6 +109,24 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }
   def vidaResultante (vidaAPerder : Int) : Int = math.max(0, saludActual - vidaAPerder);
   def bajarVida (vidaPerdida : Int ) : Heroe = this.copy(saludActual = saludActual - vidaPerdida);
+  def subirNivel(nivelesGanados: Int) : Heroe = this.copy(nivel = nivel + nivelesGanados)
+
+  def esLadron() : Boolean ={
+    trabajo match {
+      case Ladrón(habilidadBase) => true
+      case _ => false
+    }
+  }
+
+  // DONDE PONGO ESTO??
+/*  def esCompatible(grupo: GrupoVivo) : Boolean = {
+    compatibilidad match{
+      case introvertidos =>  grupo.length <= 3;
+      case bigotes => // que le caen bien los grupos donde no hay ladrones
+      case interesados(objParticular: Item) => // se suman a un grupo solamente si tiene cierto objeto  particular que le interesa.
+      case loquitos => //siempre van a querer pelearse porque no les cae bien nadie
+    }
+  }*/
 }
 
 case class Atributos(val fuerzaBase : Int, val velocidadBase : Int, val saludBase : Int)
@@ -103,13 +145,18 @@ case class Hechizo(val nivelRequerido : Int, val nombre : String){
 
 case class Cofre(val items : List[Item], val armas : List[String], val tesoroAcumulado : Int) {
   def agregarItem(item: Item): Cofre = this.copy(items = items.appended(item));
-
+  def contieneItem(item: Item): Boolean = items.contains(item);
 }
 
 trait Item
 case object Ganzúas extends Item
 case object Llave extends Item
 
+trait Compatibilidad
+case object introvertidos extends Compatibilidad
+case object bigotes extends Compatibilidad
+case class interesados(objParticular: Item) extends Compatibilidad
+case object loquitos extends Compatibilidad
 //Como tratar a los muertos? Habría que filtrar mucho. Una mónada seria medio al pepe. No nos gusta la del entero de muertos.
 
 
