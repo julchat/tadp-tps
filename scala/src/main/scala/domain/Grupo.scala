@@ -1,11 +1,11 @@
-package domain
+package domain;
 
-abstract case class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre){
-
+abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, val puertasDisponibles : List[Puerta]){
+  def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = ???
   //TODO: Mecanica del recorrido del laberinto
   def agregarABotin(item: Item) : Grupo[T] = ???
-  def map[R <: EstadoHeroe](funcion: T => R) : Grupo[R] = ???
-
+  /*def map[R <: T](funcion: T => R) : Grupo[R] = ???*/
+  def transformarHeroes(funcion: T => T ): Grupo[T] = ???
   def masLento() : EstadoHeroe = ???
   def fuerzaTotal() : Int = ???
   def pelear(heroeExtranjero : EstadoHeroe) : Grupo[EstadoHeroe] = ???
@@ -14,7 +14,8 @@ abstract case class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofr
   def exists(funcion: T => Boolean): Boolean = ???
 }
 
-case class GrupoVivo[T <: EstadoHeroe](val _heroes : List[T], val _cofre : Cofre) extends Grupo(_heroes,_cofre) {
+case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,_puertasDisponibles : List[Puerta]) extends Grupo(_heroes,_cofre, _puertasDisponibles) {
+  override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy(_heroes = _heroes.appended(heroeExtranjero))
   override def filter (funcion: T => Boolean) : Grupo[T] = this.copy(_heroes = _heroes.filter(funcion));
   override def exists (funcion: T => Boolean) : Boolean = this.heroes.exists(funcion)
   override def agregarABotin(item: Item) : Grupo[T] = this.copy(_cofre = _cofre.agregarItem(item));
@@ -38,9 +39,7 @@ case class GrupoVivo[T <: EstadoHeroe](val _heroes : List[T], val _cofre : Cofre
 
   // TODO : Se usa para enfrentar al heroe si no es compatible
   override def fuerzaTotal(): Int = {
-    var sum = 0
-    heroes.foreach(sum += _.getFuerza())
-    sum
+    heroes.foldRight[Int](0)(_.heroe.getFuerza()+_)
   }
 
   // ENCUENTRO ------------------------------------------
@@ -60,24 +59,25 @@ case class GrupoVivo[T <: EstadoHeroe](val _heroes : List[T], val _cofre : Cofre
 
   def contieneItem(unItem: Item): Boolean = _cofre.contieneItem(unItem)
 
-  override def map[R <: EstadoHeroe](funcion: T => R): Grupo[R] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)));
-
+  /*override def map[R <: T](funcion: T => R): Grupo[R] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)));*/
+  override def transformarHeroes(funcion: T => T ): Grupo[T] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
 }
 
 
-case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre) extends Grupo(_heroes, _cofre){
+case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre, _puertasDisponibles : List[Puerta]) extends Grupo(_heroes, _cofre, _puertasDisponibles){
+  override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy();
   override def masLento() : EstadoHeroe= ???
   override def fuerzaTotal() :Int = ???
-  override def map[R <: EstadoHeroe](funcion: T => R) : Grupo[R] = this.copy();
+  override def transformarHeroes(funcion: T => T ): Grupo[T] = this.copy();
   override def getLider(): Option[EstadoHeroe] = None
 }
 
-abstract case class EstadoHeroe(val heroe : Heroe){
+abstract class EstadoHeroe(val heroe : Heroe){
   def estoyVivo() : Boolean;
   def perderVida(vidaAPerder : Int) : EstadoHeroe;
   def matarCondicion(condicion: EstadoHeroe): EstadoHeroe;
   def getVelocidad() : Int = heroe.atributos.velocidadBase;
-  def getFuerza() : Double = heroe.getFuerza;
+  def getFuerza() : Int = heroe.getFuerza;
   def esLadron() = heroe.esLadron();
   def subirNivel(niveles : Int) : EstadoHeroe;
 }
@@ -115,16 +115,16 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
   def subirNivel(niveles : Int) :EstadoHeroe = ???
   override def getVelocidad() : Int = ???
   override def esLadron(): Boolean = ???
-  override def getFuerza(): Double = ???
+  override def getFuerza(): Int = ???
 }
 
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo,val compatibilidad : Compatibilidad){
   //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
 
-  def getFuerza() : Double = {
-    val adicional : Double =
+  def getFuerza() : Int = {
+    val adicional : Int =
     trabajo match {
-    case Guerrero => atributos.fuerzaBase * 0.2 * nivel
+    case Guerrero => (atributos.fuerzaBase * 0.2 * nivel).toInt
     case _ => 0
   }
   atributos.fuerzaBase + adicional
@@ -183,11 +183,28 @@ trait Item
 case object Ganzúas extends Item
 case object Llave extends Item
 
-trait Compatibilidad
-case object introvertidos extends Compatibilidad
-case object bigotes extends Compatibilidad
-case class interesados(objParticular: Item) extends Compatibilidad
-case object loquitos extends Compatibilidad
+trait Compatibilidad {
+  type Personalidad = Grupo[EstadoHeroe] => Boolean
+  val criterio: Personalidad
+}
+case object introvertidos extends Compatibilidad {
+  override val criterio: Personalidad = _.heroes.length <= 3
+}
+case object bigotes extends Compatibilidad{
+  override val criterio: Personalidad = _.heroes.find(h => h.heroe.trabajo match {
+    case Ladrón(a) => true
+    case _ => false
+  }) match {
+    case Some(a) => false
+    case None => true
+  }
+}
+case class interesados(objParticular: Item) extends Compatibilidad{
+  override val criterio: Personalidad = _.cofre.contieneItem(objParticular)
+}
+case object loquitos extends Compatibilidad{
+  override val criterio: Personalidad = _ => false
+}
 //Como tratar a los muertos? Habría que filtrar mucho. Una mónada seria medio al pepe. No nos gusta la del entero de muertos.
 
 

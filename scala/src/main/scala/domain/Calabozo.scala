@@ -7,9 +7,8 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   /*  1. Va a ver que puertas estan abiertas
     2. Va a elegir una puerta el lider => si es la de salida tengo que salir
     3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembros, del botin y de las puertas abiertas)*/
-  def puertasVisitadas(): List[Puerta]
-
-  def recorrerCalabozo(): Habitacion
+  def puertasVisitadas(): List[Puerta] = ???
+  def recorrerCalabozo(): Habitacion = ???
 }
 
 
@@ -39,10 +38,13 @@ case class Cerrada( val habitacionLadoA : Habitacion,val habitacionLadoB : Optio
     val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
     val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
+      case _ => false
+    })
+    val condicion3: Condicion = grupo => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match{
       case Ladrón(habilidadBase) => grupo.cofre.items.contains(Ganzúas)
       case _ => false
     })
-    List(condicion1,condicion2)
+    List(condicion1,condicion2,condicion3)
   }
 }
 
@@ -53,7 +55,7 @@ case class Escondida( val habitacionLadoA : Habitacion,val habitacionLadoB : Opt
       case _ => false
     })
     val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case  Mago(hechizosAprendibles)  => (Mago) (estadoHeroe.heroe.trabajo).conoceElHechizo(Vislumbrar,estadoHeroe.heroe.nivel);
+      case  Mago(hechizosAprendibles)  => estadoHeroe.heroe.trabajo.asInstanceOf[Mago].conoceElHechizo(Vislumbrar,estadoHeroe.heroe.nivel);
       case _ => false
     })
     List(condicion1,condicion2)
@@ -63,7 +65,7 @@ case class Escondida( val habitacionLadoA : Habitacion,val habitacionLadoB : Opt
 case class Encantada( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion], hechizoUtilizado: Hechizo) extends Puerta{
   override def condicionesEspecificas() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case  Mago(hechizosAprendibles)  => (Mago) (estadoHeroe.heroe.trabajo).conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
+      case  Mago(hechizosAprendibles)  => estadoHeroe.heroe.trabajo.asInstanceOf[Mago].conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
       case _ => false
     })
     List(condicion1)
@@ -73,18 +75,28 @@ case class Encantada( val habitacionLadoA : Habitacion,val habitacionLadoB : Opt
 
 
 case class Habitacion(val situacion : Situacion,val puertas : List[Puerta]){ //TODO: Terminar las habitaciones
+
   def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     situacion match{
       case NoPasaNada() => grupo;
       case TesoroPerdido(item) => grupo.agregarABotin(item);
-      case MuchosMuchosDardos() => grupo.map(unEstadoHeroe => unEstadoHeroe.perderVida(10));
-      case TrampaDeLeones() => grupo.map( h => h.matarCondicion(grupo.masLento()) );
+      case MuchosMuchosDardos() => grupo.transformarHeroes(unEstadoHeroe => unEstadoHeroe.perderVida(10));
+      case TrampaDeLeones() => grupo.transformarHeroes( h => h.matarCondicion(grupo.masLento()) );
       //case TrampaDeLeones() => grupo.agregarABotin(Llave);//Map no es del to-do util porque tenemos que analizar por to-do el conjunto
                               //Hacer un fold o un reduce para conseguir al mas lento. Primero habria que filtrar los vivos
                               //Dentro de la funcion del fold podria usarse para la comparacion que este vivo
       // case Encuentro(personalidad) => grupo //Map con aplicacion parcial para ver como se lleva con el lider?
-
-      case Encuentro(heroeExtranjero : EstadoHeroe, grupo.getLider() ) =>  grupo.pelear(heroeExtranjero);
+      case Encuentro(heroeExtranjero : Vivo) => {
+        type Personalidad = (Grupo[EstadoHeroe] => Boolean)
+        val personalidadEncuentro : Personalidad = heroeExtranjero.heroe.compatibilidad.criterio;
+        val personalidadLider : Personalidad = grupo.getLider().get.heroe.compatibilidad.criterio;
+        if(personalidadEncuentro.apply(grupo) && personalidadLider.apply(grupo.agregarHeroe(heroeExtranjero))){
+          grupo.agregarHeroe(heroeExtranjero)
+        } else {
+          grupo.pelear(heroeExtranjero)
+        }
+      }
+     //case Encuentro(heroExtranjero : Vivo) => if(grupo.getLider().get.esCompatible(grupo.agregarHeroe(heroExtranjero)) && heroExtranjero.heroe.esCompatible(grupo)) La otra opcion era hacer el pattern matching en esCompatible
     }
 
 
@@ -94,14 +106,14 @@ case class Habitacion(val situacion : Situacion,val puertas : List[Puerta]){ //T
 trait Situacion;
 case class NoPasaNada() extends Situacion{
 }
-case class TesoroPerdido(val item: Item){
+case class TesoroPerdido(val item: Item) extends Situacion {
 }
-case class MuchosMuchosDardos(){
+case class MuchosMuchosDardos() extends  Situacion {
 
 }
-case class TrampaDeLeones(){
+case class TrampaDeLeones() extends Situacion {
 
 }
 
-case class Encuentro(val personalidad : (Grupo[EstadoHeroe] => Boolean), val compatibilidad : Boolean = personalidad.apply(grupo));
+case class Encuentro(val heroe: Vivo) extends Situacion;
 
