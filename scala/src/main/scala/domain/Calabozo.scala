@@ -2,10 +2,14 @@ package domain
 
 import scala.Specializable.Group
 
-class Calabozo(val puertaPrincipal : Puerta){
+class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta){
 //TODO: Modelar como estarian las habitaciones y las puertas aca
-
+/*  1. Va a ver que puertas estan abiertas
+    2. Va a elegir una puerta el lider => si es la de salida tengo que salir
+    3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembros, del botin y de las puertas abiertas)*/
 }
+
+
 
 
 trait Puerta{ //TODO: Desarrollar las puertas
@@ -67,13 +71,10 @@ case class Encantada( val habitacionLadoA : Habitacion,val habitacionLadoB : Opt
 
 
 case class Habitacion(val situacion : Situacion,val puertas : List[Puerta]){ //TODO: Terminar las habitaciones
-  val agregarABotin : Function2[Item, Grupo[EstadoHeroe], Grupo[EstadoHeroe]] = (item,grupo) => {
-
-  }
   def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     situacion match{
       case NoPasaNada() => grupo;
-      case TesoroPerdido(item) => grupo.map(agregarABotin.apply(item,grupo));
+      case TesoroPerdido(item) => grupo.agregarABotin(item);
       case MuchosMuchosDardos() => grupo.map(unEstadoHeroe => unEstadoHeroe.perderVida(10));
       case TrampaDeLeones() => grupo.map( h => h.matarCondicion(grupo.masLento()) );
       //case TrampaDeLeones() => grupo.agregarABotin(Llave);//Map no es del to-do util porque tenemos que analizar por to-do el conjunto
