@@ -1,6 +1,6 @@
 package domain;
 
-abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, val puertasDisponibles : List[Puerta]){
+abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, val habitacion: Habitacion) {
   def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = ???
   //TODO: Mecanica del recorrido del laberinto
   def agregarABotin(item: Item) : Grupo[T] = ???
@@ -14,7 +14,7 @@ abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, va
   def exists(funcion: T => Boolean): Boolean = ???
 }
 
-case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,_puertasDisponibles : List[Puerta]) extends Grupo(_heroes,_cofre, _puertasDisponibles) {
+case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _habitacion: Habitacion) extends Grupo(_heroes, _cofre, _habitacion) {
   override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy(_heroes = _heroes.appended(heroeExtranjero))
   override def filter (funcion: T => Boolean) : Grupo[T] = this.copy(_heroes = _heroes.filter(funcion));
   override def exists (funcion: T => Boolean) : Boolean = this.heroes.exists(funcion)
@@ -64,7 +64,7 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,_puerta
 }
 
 
-case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre, _puertasDisponibles : List[Puerta]) extends Grupo(_heroes, _cofre, _puertasDisponibles){
+case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre, _habitacion: Habitacion) extends Grupo(_heroes, _cofre, _habitacion){
   override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy();
   override def masLento() : EstadoHeroe= ???
   override def fuerzaTotal() :Int = ???
@@ -118,7 +118,7 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
   override def getFuerza(): Int = ???
 }
 
-case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo,val compatibilidad : Compatibilidad){
+case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
   //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
 
   def getFuerza() : Int = {
