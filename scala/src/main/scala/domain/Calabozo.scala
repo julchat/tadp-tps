@@ -9,42 +9,59 @@ class Calabozo(val puertaPrincipal : Puerta){
 
 
 trait Puerta{ //TODO: Desarrollar las puertas
-  val HabitacionLadoA : Habitacion
-  val HabitacionLadoB : Option[Habitacion]
-
-  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion(grupo))
-  def condicionesParaAbrir : List[(Grupo[EstadoHeroe] => Boolean)]
-}
-
-case class Abierta() extends Puerta{
-
-  override def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = false
-
-}
-
-case class Cerrada() extends Puerta {//TODO: Aca hay que cambiar esto
-  override def condicionesParaAbrir : List[(Grupo[EstadoHeroe] => Boolean)]
-  def condicion (grupo: Grupo[EstadoHeroe]) : (List[Boolean]) = {
-    grupo.map(estadoHeroe => estadoHeroe.heroe.trabajo match
-    {
-      case Ladrón(habilidadBase) => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
-      case Ladrón(habilidadBase) => grupo.cofre.items.exists(item => item match {
-        case Ganzúas => true
-        case Llave => false
-        case _ => false
-      })
-      case _ => grupo.cofre.items.contains(Llave)
+  val habitacionLadoA : Habitacion
+  val habitacionLadoB : Option[Habitacion]
+  type Condicion = (Grupo[EstadoHeroe] => Boolean)
+  val condicionBase : Condicion = (grupo) => {
+    grupo.heroes.exists(heroe => heroe match {
+      case Ladrón(habilidadBase) => habilidadBase >= 20
+      case _ => false
     })
   }
-
-
+  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
+  def condicionesParaAbrir : List[Condicion] = condicionBase :: this.condicionesEspecificas();
+  def condicionesEspecificas() : List[Condicion] = ???
 }
 
+case class Abierta( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta(){
+  override def condicionesEspecificas: List[Condicion] = ???
+  override def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = false
+}
+
+case class Cerrada( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta {//TODO: Aca hay que cambiar esto
+  override def condicionesEspecificas() : List[Condicion] = {
+    val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
+    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe match {
+      case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
+      case Ladrón(habilidadBase) => grupo.cofre.items.contains(Ganzúas)
+      case _ => false
+    })
+    List(condicion1,condicion2)
+  }
+}
+
+case class Escondida( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta{
+  override def condicionesEspecificas() : List[Condicion] = {
+    val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
+    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe match {
+      case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
+      case Ladrón(habilidadBase) => grupo.cofre.items.contains(Ganzúas)
+      case _ => false
+    })
+    List(condicion1,condicion2)
+  }
+}
+
+
+
 case class Habitacion(val situacion : Situacion,val puertas : List[Puerta]){ //TODO: Terminar las habitaciones
+  val agregarABotin : Function2[Item, Grupo[EstadoHeroe], Grupo[EstadoHeroe]] = (item,grupo) => {
+
+  }
   def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     situacion match{
       case NoPasaNada() => grupo;
-      case TesoroPerdido(item) => grupo.agregarABotin(item);
+      case TesoroPerdido(item) => grupo.map(agregarABotin.apply(item,grupo));
       case MuchosMuchosDardos() => grupo.map(unEstadoHeroe => unEstadoHeroe.perderVida(10));
       case TrampaDeLeones() => grupo.map( h => h.matarCondicion(grupo.masLento()) );
       //case TrampaDeLeones() => grupo.agregarABotin(Llave);//Map no es del to-do util porque tenemos que analizar por to-do el conjunto
@@ -52,9 +69,10 @@ case class Habitacion(val situacion : Situacion,val puertas : List[Puerta]){ //T
                               //Dentro de la funcion del fold podria usarse para la comparacion que este vivo
       // case Encuentro(personalidad) => grupo //Map con aplicacion parcial para ver como se lleva con el lider?
 
-      case Encuentro(heroeExtranjero : EstadoHeroe) =>  grupo.pelear(heroeExtranjero);
-      case Encuentro(heroeExtranjero : EstadoHeroe) =>  grupo.pelear(heroeExtranjero);
+      case Encuentro(heroeExtranjero : EstadoHeroe, grupo.getLider() ) =>  grupo.pelear(heroeExtranjero);
     }
+
+
   }
 }
 
@@ -70,7 +88,5 @@ case class TrampaDeLeones(){
 
 }
 
-case class Encuentro(val personalidad : (Grupo[EstadoHeroe] => Boolean));
-
-
+case class Encuentro(val personalidad : (Grupo[EstadoHeroe] => Boolean), val compatibilidad : Boolean = personalidad.apply(grupo));
 
