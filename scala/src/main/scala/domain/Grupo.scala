@@ -157,13 +157,22 @@ trait Trabajo
 
 case object Guerrero extends Trabajo
 case class Ladrón(val habilidadBase : Int) extends Trabajo
-case class Mago(val hechizosAprendibles : List[Hechizo]) extends Trabajo
+case class Mago(val hechizosAprendibles : List[HechizoAprendible]) extends Trabajo{
+  def conoceElHechizo(hechizo : Hechizo, nivelMago : Int) : Boolean = {
+  hechizosAprendibles.exists(h => h.hechizo == hechizo && h.conoceElHechizo(nivelMago))
+  }
+}
 
-case class Hechizo(val nivelRequerido : Int, val nombre : String){
+case class HechizoAprendible(val nivelRequerido : Int, val hechizo : Hechizo){
   def conoceElHechizo(nivel : Int) : Boolean = {
     nivel >= nivelRequerido
   }
 }
+
+trait Hechizo
+case object Vislumbrar extends Hechizo
+
+
 
 case class Cofre(val items : List[Item], val armas : List[String], val tesoroAcumulado : Int) {
   def agregarItem(item: Item): Cofre = this.copy(items = items.appended(item));

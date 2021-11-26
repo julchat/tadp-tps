@@ -13,8 +13,8 @@ trait Puerta{ //TODO: Desarrollar las puertas
   val habitacionLadoB : Option[Habitacion]
   type Condicion = (Grupo[EstadoHeroe] => Boolean)
   val condicionBase : Condicion = (grupo) => {
-    grupo.heroes.exists(heroe => heroe match {
-      case Ladrón(habilidadBase) => habilidadBase >= 20
+    grupo.heroes.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
+      case Ladrón(habilidadBase) => (habilidadBase * estadoHeroe.heroe.nivel) >= 20
       case _ => false
     })
   }
@@ -31,7 +31,7 @@ case class Abierta( val habitacionLadoA : Habitacion,val habitacionLadoB : Optio
 case class Cerrada( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta {//TODO: Aca hay que cambiar esto
   override def condicionesEspecificas() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
-    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe match {
+    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
       case Ladrón(habilidadBase) => grupo.cofre.items.contains(Ganzúas)
       case _ => false
@@ -42,13 +42,25 @@ case class Cerrada( val habitacionLadoA : Habitacion,val habitacionLadoB : Optio
 
 case class Escondida( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta{
   override def condicionesEspecificas() : List[Condicion] = {
-    val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
-    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe match {
-      case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
-      case Ladrón(habilidadBase) => grupo.cofre.items.contains(Ganzúas)
+    val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
+      case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 6
+      case _ => false
+    })
+    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
+      case  Mago(hechizosAprendibles)  => (Mago) (estadoHeroe.heroe.trabajo).conoceElHechizo(Vislumbrar,estadoHeroe.heroe.nivel);
       case _ => false
     })
     List(condicion1,condicion2)
+  }
+}
+
+case class Encantada( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion], hechizoUtilizado: Hechizo) extends Puerta{
+  override def condicionesEspecificas() : List[Condicion] = {
+    val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
+      case  Mago(hechizosAprendibles)  => (Mago) (estadoHeroe.heroe.trabajo).conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
+      case _ => false
+    })
+    List(condicion1)
   }
 }
 
