@@ -187,10 +187,10 @@ trait Compatibilidad {
   type Personalidad = Grupo[EstadoHeroe] => Boolean
   val criterio: Personalidad
 }
-case object introvertidos extends Compatibilidad {
+case object Introvertidos extends Compatibilidad {
   override val criterio: Personalidad = _.heroes.length <= 3
 }
-case object bigotes extends Compatibilidad{
+case object Bigotes extends Compatibilidad{
   override val criterio: Personalidad = _.heroes.find(h => h.heroe.trabajo match {
     case Ladrón(a) => true
     case _ => false
@@ -199,7 +199,7 @@ case object bigotes extends Compatibilidad{
     case None => true
   }
 }
-case class interesados(objParticular: Item) extends Compatibilidad{
+case class Interesados(objParticular: Item) extends Compatibilidad{
   override val criterio: Personalidad = _.cofre.contieneItem(objParticular)
 }
 case object loquitos extends Compatibilidad{
