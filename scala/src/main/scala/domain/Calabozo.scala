@@ -2,17 +2,15 @@ package domain
 
 import scala.Specializable.Group
 
-class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta){
-//TODO: Modelar como estarian las habitaciones y las puertas aca
-/*  1. Va a ver que puertas estan abiertas
+class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
+  //TODO: Modelar como estarian las habitaciones y las puertas aca
+  /*  1. Va a ver que puertas estan abiertas
     2. Va a elegir una puerta el lider => si es la de salida tengo que salir
     3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembros, del botin y de las puertas abiertas)*/
-  def puertasVisitadas() : List[Puerta] = {
-}
-  def recorrerCalabozo() : Habitacion = {
-  }
-}
+  def puertasVisitadas(): List[Puerta]
 
+  def recorrerCalabozo(): Habitacion
+}
 
 
 
