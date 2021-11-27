@@ -1,5 +1,5 @@
-import domain.{Atributos, Guerrero, Heroe, Introvertidos, Ladrón, Mago, Vislumbrar}
-import org.scalatest.matchers.should.Matchers._
+package domain
+
 import org.scalatest.freespec.AnyFreeSpec
 
 
@@ -8,20 +8,14 @@ class test extends AnyFreeSpec {
   "Trabajos" - {
     "un heroe con 100 de fuerza base y nivel 1 siendo guerrero debe tener 120 de fuerza" in {
 
-      var atributo = Atributos(100, 50, 80)
-      var unguerrero = Guerrero
-      var unintrovertido= Introvertidos
-      var unGuerrero = Heroe(atributo, 1, 100, unguerrero, unintrovertido)
-
-      unGuerrero.getFuerza()
-      assert(unGuerrero.atributos.fuerzaBase == 120)
+      val atributo = Atributos(100, 50, 80)
+      val unGuerrero = Heroe(atributo, 1, 100, Guerrero, Introvertido, Heroico)
+      assert(unGuerrero.getFuerza() == 120)
     }
     "un ladron con habilidad base 30 y nivel 2 debe tener habilidad final 36" in {
 
-      var atributos = Atributos(100, 50, 80)
-      var unladron = Ladrón(30)
-      var introvertido = Introvertidos
-      var heroe = Heroe(atributos, 2, 100, unladron, introvertido)
+      val atributos = Atributos(100, 50, 80)
+      val heroe = Heroe(atributos, 2, 100, Ladrón(30), Loquitos,Heroico)
 
       //assert(heroe.trabajo.habilidadBase == 360)
     }

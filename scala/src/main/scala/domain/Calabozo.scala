@@ -11,30 +11,30 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   def recorrerCalabozo(): Habitacion = ???
 }
 
-
-
-trait Puerta{ //TODO: Desarrollar las puertas
-  val habitacionLadoA : Habitacion
-  val habitacionLadoB : Option[Habitacion]
+case class Puerta( val habitacionLadoA: Habitacion, val habitacionLadoB: Option[Habitacion], val dificultades : List[Dificultad]) {
   type Condicion = (Grupo[EstadoHeroe] => Boolean)
-  val condicionBase : Condicion = (grupo) => {
+  val condicionBase: Condicion = (grupo) => {
     grupo.heroes.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase) => (habilidadBase * estadoHeroe.heroe.nivel) >= 20
       case _ => false
     })
   }
-  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
-  def condicionesParaAbrir : List[Condicion] = condicionBase :: this.condicionesEspecificas();
-  def condicionesEspecificas() : List[Condicion] = ???
+
+  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean =
+    if (dificultades.isEmpty) condicionBase.apply(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
+    else true
+
+  def abrirPuerta() : Puerta = this.copy(dificultades = List())
 }
 
-case class Abierta( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta(){
-  override def condicionesEspecificas: List[Condicion] = ???
-  override def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = false
+trait Dificultad{ //TODO: Desarrollar las puertas
+  type Condicion = (Grupo[EstadoHeroe] => Boolean)
+  def puedenSuperarDificultad(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
+  def condicionesParaAbrir() : List[Condicion] = ???
 }
 
-case class Cerrada( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta {//TODO: Aca hay que cambiar esto
-  override def condicionesEspecificas() : List[Condicion] = {
+case class Cerrada() extends Dificultad() {
+  override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
     val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 10
@@ -48,8 +48,8 @@ case class Cerrada( val habitacionLadoA : Habitacion,val habitacionLadoB : Optio
   }
 }
 
-case class Escondida( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion]) extends Puerta{
-  override def condicionesEspecificas() : List[Condicion] = {
+case class Escondida() extends Dificultad(){
+  override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 6
       case _ => false
@@ -62,8 +62,8 @@ case class Escondida( val habitacionLadoA : Habitacion,val habitacionLadoB : Opt
   }
 }
 
-case class Encantada( val habitacionLadoA : Habitacion,val habitacionLadoB : Option[Habitacion], hechizoUtilizado: Hechizo) extends Puerta{
-  override def condicionesEspecificas() : List[Condicion] = {
+case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
+  override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case  Mago(hechizosAprendibles)  => estadoHeroe.heroe.trabajo.asInstanceOf[Mago].conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
       case _ => false

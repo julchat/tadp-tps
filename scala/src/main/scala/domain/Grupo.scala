@@ -127,7 +127,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
     case Guerrero => (atributos.fuerzaBase * 0.2 * nivel).toInt
     case _ => 0
   }
-  atributos.fuerzaBase + adicional
+    atributos.fuerzaBase + adicional
   }
   def vidaResultante (vidaAPerder : Int) : Int = math.max(0, saludActual - vidaAPerder);
   def bajarVida (vidaPerdida : Int ) : Heroe = this.copy(saludActual = saludActual - vidaPerdida);
@@ -138,6 +138,13 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
       case Ladrón(habilidadBase) => true
       case _ => false
     }
+  }
+
+  def elegirPuerta(grupo: Grupo[EstadoHeroe]):Puerta = criterioEleccion match {
+    case Heroico => grupo.
+    case Ordenado =>
+    case Vidente =>
+    case _ =>
   }
 
   // DONDE PONGO ESTO??
@@ -187,7 +194,7 @@ trait Compatibilidad {
   type Personalidad = Grupo[EstadoHeroe] => Boolean
   val criterio: Personalidad
 }
-case object Introvertidos extends Compatibilidad {
+case object Introvertido extends Compatibilidad {
   override val criterio: Personalidad = _.heroes.length <= 3
 }
 case object Bigotes extends Compatibilidad{
@@ -202,9 +209,15 @@ case object Bigotes extends Compatibilidad{
 case class Interesados(objParticular: Item) extends Compatibilidad{
   override val criterio: Personalidad = _.cofre.contieneItem(objParticular)
 }
-case object loquitos extends Compatibilidad{
+case object Loquitos extends Compatibilidad{
   override val criterio: Personalidad = _ => false
 }
+
+trait Criterio
+case object Heroico extends Criterio
+case object Ordenado extends Criterio
+case object Vidente extends Criterio
+
 //Como tratar a los muertos? Habría que filtrar mucho. Una mónada seria medio al pepe. No nos gusta la del entero de muertos.
 
 
