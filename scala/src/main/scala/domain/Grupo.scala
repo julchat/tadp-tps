@@ -80,10 +80,10 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _ha
 }
 
 
-case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre, _habitacion: Habitacion, _puertas: List[Puerta]) extends Grupo(_heroes, _cofre, _habitacion, _puertas){
+case class GrupoMuerto[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre, _habitacion : Habitacion, _puertas : List[Puerta]) extends Grupo(_heroes, _cofre, _habitacion, _puertas){
   override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy();
   override def cantidadDeVivos(): Int = 0
-  override def masLento() : EstadoHeroe= ???
+  override def masLento() : EstadoHeroe = ???
   override def conMasNivel() : EstadoHeroe = ???
   override def fuerzaTotal() :Int = ???
   override def transformarHeroes(funcion: T => T ): Grupo[T] = this.copy();

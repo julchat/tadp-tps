@@ -1,8 +1,10 @@
 package domain
 
+import scala.util.Try
+case class GrupoMurioException() extends Exception("Se murio el grupo")
 trait Condicion extends (Grupo[EstadoHeroe] => Boolean)
 
-class SeEncontroLaSalidaException() extends RuntimeException
+case class SeEncontroLaSalidaException() extends RuntimeException
 
 class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   //TODO: Modelar como estarian las habitaciones y las puertas aca
@@ -12,6 +14,23 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   def puertasVisitadas(): List[Puerta] = ???
   //def recorrerCalabozo(): Habitacion = ???
   //def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = puertaPrincipal.recorrer(grupo)
+/*  def recorrerTodoElCalabozo(grupo : Grupo[EstadoHeroe]):Grupo[EstadoHeroe]  = {
+    val recorrido : Try[Grupo[EstadoHeroe]] = Try {
+      while (true) {
+        recorrer(grupo)
+      }
+    }.recover({
+      case GrupoMurioException() => GrupoMuerto()
+/*      case GrupoSeQuedoSinPuertas =>
+      case GrupoExitoso =>*/
+    })
+
+
+    class GrupoSeQuedoSinPuertas() extends Exception
+    class GrupoExitoso() extends Exception
+      
+  }*/
+
 
   def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     if(puertaPrincipal.puedoSerAbierta(grupo)){
