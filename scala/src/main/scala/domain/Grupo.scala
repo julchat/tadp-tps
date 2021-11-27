@@ -4,6 +4,7 @@ abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, va
   def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = ???
   //TODO: Mecanica del recorrido del laberinto
   def agregarABotin(item: Item) : Grupo[T] = ???
+  def cantidadDeVivos(): Int
   /*def map[R <: T](funcion: T => R) : Grupo[R] = ???*/
   def transformarHeroes(funcion: T => T ): Grupo[T] = ???
   def masLento() : EstadoHeroe = ???
@@ -26,7 +27,7 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _ha
     heroes.count { unHeroe => !unHeroe.estoyVivo() };
   }
 
-  def cantidadDeVivos(): Int = {
+  override def cantidadDeVivos(): Int = {
     heroes.length - cantidadDeMuertos();
   }
 
@@ -81,6 +82,7 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _ha
 
 case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre, _habitacion: Habitacion, _puertas: List[Puerta]) extends Grupo(_heroes, _cofre, _habitacion, _puertas){
   override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy();
+  override def cantidadDeVivos(): Int = 0
   override def masLento() : EstadoHeroe= ???
   override def conMasNivel() : EstadoHeroe = ???
   override def fuerzaTotal() :Int = ???
