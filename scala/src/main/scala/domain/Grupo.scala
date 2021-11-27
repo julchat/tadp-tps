@@ -18,6 +18,7 @@ abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, va
   def puntaje(): Int
 }
 
+
 case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _habitacion: Habitacion, _puertas: List[Puerta]) extends Grupo(_heroes, _cofre, _habitacion, _puertas) {
   override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy(_heroes = _heroes.appended(heroeExtranjero))
   override def filter (funcion: T => Boolean) : Grupo[T] = this.copy(_heroes = _heroes.filter(funcion));
