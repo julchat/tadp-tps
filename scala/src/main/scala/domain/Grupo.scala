@@ -141,10 +141,10 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }
 
   def elegirPuerta(grupo: Grupo[EstadoHeroe]):Puerta = criterioEleccion match {
-    case Heroico => grupo.
-    case Ordenado =>
-    case Vidente =>
-    case _ =>
+    case Heroico => ???
+    case Ordenado => ???
+    case Vidente => ???
+    case _ => ???
   }
 
   // DONDE PONGO ESTO??
