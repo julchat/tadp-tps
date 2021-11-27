@@ -41,9 +41,9 @@ class test extends AnyFreeSpec {
 
         var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
         //var grupo=GrupoVivo(heroes,cofre,Habitacion((NoPasaNada,TrampaDeLeones),Puerta((NoPasaNada,TesoroPerdido),(Cerrada,Escondida))))
-        var grupo=GrupoVivo[EstadoHeroe](heroes,cofre,???,List.empty)
+        var grupo=GrupoVivo[EstadoHeroe](heroes,cofre,Habitacion(NoPasaNada,List.empty),List.empty)
 
-        assert(grupo.cantidadDeVivos()==3)
+        assert(grupo.cantidadDeVivos()==4)
       }
       
     }
