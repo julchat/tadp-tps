@@ -28,7 +28,7 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _ha
     heroes.length - cantidadDeMuertos();
   }
 
-  override def getLider(): Option[EstadoHeroe] = heroes.find(_.estoyVivo);;
+  override def getLider(): Option[EstadoHeroe] = heroes.find(_.estoyVivo())
 
   override def masLento(): EstadoHeroe = {
     var menor = getLider().get
@@ -145,8 +145,8 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }
 
   def elegirPuerta(grupo: Grupo[EstadoHeroe]):Puerta = criterioEleccion match {
-    case Heroico => ???
-    case Ordenado => ???
+    case Heroico => grupo.puertas.filter(puerta => puerta.estaAbierta()).head
+    case Ordenado => grupo.puertas.filter(puerta => puerta.estaAbierta()).head
     case Vidente => ???
     case _ => ???
   }

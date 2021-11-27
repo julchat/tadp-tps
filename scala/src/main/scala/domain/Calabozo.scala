@@ -30,14 +30,16 @@ case class Puerta(habitacion: Option[Habitacion], dificultades : List[Dificultad
     })
   }
 
-  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo)
+  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
 
   def abrirPuerta() : Puerta = this.copy(dificultades = List())
+
+  def estaAbierta(): Boolean = dificultades.isEmpty
 }
 
 trait Dificultad{ //TODO: Desarrollar las puertas
   def puedenSuperarDificultad(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
-  def condicionesParaAbrir() : List[Condicion] = ???
+  def condicionesParaAbrir() : List[Condicion]
 }
 
 case object Cerrada extends Dificultad {
@@ -96,6 +98,18 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
         }
       }
      //case Encuentro(heroExtranjero : Vivo) => if(grupo.getLider().get.esCompatible(grupo.agregarHeroe(heroExtranjero)) && heroExtranjero.heroe.esCompatible(grupo)) La otra opcion era hacer el pattern matching en esCompatible
+    }
+  }
+
+  def seguirRecorrido(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
+    val grupoActualizado = grupo.agregarPuertas(puertas)
+    val puertaElegida: Puerta = grupoActualizado.getLider().fold(throw new SeEncontroLaSalidaException())(lider => lider.heroe.elegirPuerta(grupo))
+
+    if(puertaElegida.puedoSerAbierta(grupo)){
+      puertaElegida.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo))
+    }
+    else{
+      GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
     }
   }
 }
