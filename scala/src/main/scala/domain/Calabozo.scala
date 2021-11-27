@@ -2,7 +2,8 @@ package domain
 
 import scala.util.Try
 case class GrupoMurioException() extends Exception("Se murio el grupo")
-trait Condicion extends (Grupo[EstadoHeroe] => Boolean)
+case class GrupoPerdidoException() extends Exception ("No hay mas puertas para abrir")
+trait Condicion extends (GrupoVivo[EstadoHeroe] => Boolean)
 
 case class SeEncontroLaSalidaException() extends RuntimeException
 
@@ -14,37 +15,37 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   def puertasVisitadas(): List[Puerta] = ???
   //def recorrerCalabozo(): Habitacion = ???
   //def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = puertaPrincipal.recorrer(grupo)
-/*  def recorrerTodoElCalabozo(grupo : Grupo[EstadoHeroe]):Grupo[EstadoHeroe]  = {
-    val recorrido : Try[Grupo[EstadoHeroe]] = Try {
-      while (true) {
-        recorrer(grupo)
-      }
-    }.recover({
-      case GrupoMurioException() => GrupoMuerto()
-/*      case GrupoSeQuedoSinPuertas =>
+  def recorrerTodoElCalabozo(grupo : GrupoVivo[EstadoHeroe]):Grupo[EstadoHeroe]  = {
+    val recorrido: Try[Grupo[EstadoHeroe]] =
+    Try {
+      var puertaElegida : Option[Puerta] = Some(puertaPrincipal)
+      while (puertaElegida != puertaSalida) {
+        puertaElegida = (recorrer(grupo, puertaElegida) match {
+          case GrupoVivo(heroes, cofre, habitacion, puertas) => grupo.getLider().get.heroe.elegirPuerta(grupo)
+          case GrupoMuerto(heroes, cofre) => throw new GrupoMurioException()
+          case GrupoPerdido() => throw new GrupoPerdidoException()
+        })
+      }.recover({
+        case GrupoMurioException() => GrupoMuerto()
+        /*      case GrupoSeQuedoSinPuertas =>
       case GrupoExitoso =>*/
-    })
-
-
-    class GrupoSeQuedoSinPuertas() extends Exception
-    class GrupoExitoso() extends Exception
-      
-  }*/
-
-
-  def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
-    if(puertaPrincipal.puedoSerAbierta(grupo)){
+      })
+    }
+  }
+  def recorrer(grupo: GrupoVivo[EstadoHeroe], puertaElegida : Option[Puerta]): Grupo[EstadoHeroe] = {
+    puertaElegida.fold(GrupoPerdido[EstadoHeroe])(puerta =>  )
+/*    if(puertaPrincipal.puedoSerAbierta(grupo)){
       puertaPrincipal.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo.agregarPuertas(List(puertaPrincipal))))
     }
     else{
-      GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
-    }
+      GrupoPerdido[EstadoHeroe]()
+    }*/
   }
 
 }
 
-case class Puerta(habitacion: Option[Habitacion], dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
-  //type Condicion = (Grupo[EstadoHeroe] => Boolean)
+case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
+  type Condicion = (GrupoVivo[EstadoHeroe] => Boolean)
   val condicionBase: Condicion = grupo => {
     grupo.heroes.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase) => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 20
@@ -52,7 +53,7 @@ case class Puerta(habitacion: Option[Habitacion], dificultades : List[Dificultad
     })
   }
 
-  def puedoSerAbierta(grupo: Grupo[EstadoHeroe]): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
+  def puedoSerAbierta(grupo: GrupoVivo[EstadoHeroe]): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
 
   def abrirPuerta() : Puerta = this.copy(dificultades = List())
 
@@ -73,14 +74,14 @@ case class Puerta(habitacion: Option[Habitacion], dificultades : List[Dificultad
 }
 
 trait Dificultad{ //TODO: Desarrollar las puertas
-  def puedenSuperarDificultad(grupo: Grupo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
+  def puedenSuperarDificultad(grupo: GrupoVivo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
   def condicionesParaAbrir() : List[Condicion]
 }
 
 case object Cerrada extends Dificultad {
   override def condicionesParaAbrir() : List[Condicion] = {
-    val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
-    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
+    val condicion1 : Condicion = grupo => grupo.cofre.items.contains(Llave)
+    val condicion2 : Condicion = grupo => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase)  => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 10
       case _ => false
     }) || grupo.cofre.items.contains(Ganzúas)
@@ -136,7 +137,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
     }
   }
 
-  def seguirRecorrido(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
+  def seguirRecorrido(grupo: GrupoVivo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     val grupoActualizado = grupo.agregarPuertas(puertas)
     val puertaElegida: Puerta = grupoActualizado.getLider().fold(throw new SeEncontroLaSalidaException())(lider => lider.heroe.elegirPuerta(grupo))
 
@@ -144,7 +145,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
       puertaElegida.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo))
     }
     else{
-      GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
+      GrupoMuerto()[EstadoHeroe]
     }
   }
 }

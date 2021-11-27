@@ -69,4 +69,33 @@ class test extends AnyFreeSpec {
 
   }
 
+  "Calabozo" - {
+    val habitacionA : Habitacion()
+    val habitacionB : Habitacion()
+    val habitacionC : Habitacion()
+    val habitacionD : Habitacion()
+    val habitacionE : Habitacion()
+    val habitacionF : Habitacion()
+    val habitacionG : Habitacion()
+    val habitacionH : Habitacion()
+    val habitacionI : Habitacion()
+    val habitacionJ : Habitacion()
+    val habitacionK : Habitacion()
+
+    val puertaEntrada : Puerta = Puerta(Some(habitacionA))
+    val puertaAB: Puerta = Puerta(Some(habitacionB))
+    val puertaBC: Puerta = Puerta(Some(habitacionC))
+    val puertaCD: Puerta = Puerta(Some(habitacionD))
+    val puertaDE: Puerta = Puerta(Some(habitacionE))
+    val puertaEF: Puerta = Puerta(Some(habitacionF))
+    val puertaFG: Puerta = Puerta(Some(habitacionG))
+    val puertaGK: Puerta = Puerta(Some(habitacionK))
+    val puertaGH: Puerta = Puerta(Some(habitacion))
+    val puertaHI: Puerta
+    val puertaKI: Puerta
+    val puertaIJ: Puerta
+    val puertaJC: Puerta
+
+  }
+
 }
