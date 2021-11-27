@@ -4,12 +4,15 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   //TODO: Modelar como estarian las habitaciones y las puertas aca
   /*  1. Va a ver que puertas estan abiertas
     2. Va a elegir una puerta el lider => si es la de salida tengo que salir
-    3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembros, del botin y de las puertas abiertas)*/
+    3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembrodis, del botin y de las puertas abiertas)*/
   def puertasVisitadas(): List[Puerta] = ???
-  def recorrerCalabozo(): Habitacion = ???
+  //def recorrerCalabozo(): Habitacion = ???
+  def recorrer(grupo: GrupoVivo[Vivo]): Grupo[EstadoHeroe] = {
+    grupo.copy()
+  }
 }
 
-case class Puerta( val habitacionLadoA: Habitacion, val habitacionLadoB: Option[Habitacion], val dificultades : List[Dificultad]) {
+case class Puerta(habitacionLadoA: Habitacion, habitacionLadoB: Option[Habitacion], dificultades : List[Dificultad]) {
   type Condicion = (Grupo[EstadoHeroe] => Boolean)
   val condicionBase: Condicion = (grupo) => {
     grupo.heroes.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
@@ -31,7 +34,7 @@ trait Dificultad{ //TODO: Desarrollar las puertas
   def condicionesParaAbrir() : List[Condicion] = ???
 }
 
-case class Cerrada() extends Dificultad() {
+case object Cerrada extends Dificultad {
   override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.cofre.items.contains(Llave)
     val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
@@ -46,7 +49,7 @@ case class Cerrada() extends Dificultad() {
   }
 }
 
-case class Escondida() extends Dificultad(){
+case object Escondida extends Dificultad{
   override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase)  => (habilidadBase * estadoHeroe.heroe.nivel) >= 6
@@ -71,8 +74,7 @@ case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
 }
 
 
-
-case class Habitacion(val situacion : Situacion,val puertas : List[Puerta]){ //TODO: Terminar las habitaciones
+case class Habitacion(situacion : Situacion,puertas : List[Puerta]){
 
   def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     situacion match{
