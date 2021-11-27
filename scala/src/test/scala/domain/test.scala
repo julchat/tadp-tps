@@ -23,7 +23,7 @@ class test extends AnyFreeSpec {
 
       var atributos = Atributos(100, 50, 80)
       var hechizos = List(HechizoAprendible(2, Vislumbrar))
-      var heroe = Heroe(atributos, 1, 100, Mago(hechizos), Introvertido)
+      var heroe = Heroe(atributos, 1, 100, Mago(hechizos), Introvertido, Heroico)
 
       //assert(heroe.trabajo.conoceElHechizo)
     }
@@ -32,16 +32,18 @@ class test extends AnyFreeSpec {
       "si la salud de un aventurero baja a cero, es eliminado del grupo" in {
         var atributos = Atributos(100, 50, 80)
         var hechizos = List(HechizoAprendible(2, Vislumbrar))
-        val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
-        val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico)
-        val guerrerodos = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico)
-        val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico)
+        val ladron = Vivo(Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico))
+        val guerrerouno = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
+        val guerrerodos = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
+        val mago = Vivo(Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico))
 
-        var heroes=List(guerrerouno,ladron,guerrerodos,mago)
+        var heroes=List[EstadoHeroe](guerrerouno,ladron,guerrerodos,mago)
 
-        var cofre=Cofre((Ganzúas,Llave),("chuchillo,pistola"),45)
-        var grupo=GrupoVivo(heroes,cofre,Habitacion((NoPasaNada,TrampaDeLeones),Puerta((NoPasaNada,TesoroPerdido),(Cerrada,Escondida))))
-        assert(grupo.cantidadDeVivos()==4)
+        var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
+        //var grupo=GrupoVivo(heroes,cofre,Habitacion((NoPasaNada,TrampaDeLeones),Puerta((NoPasaNada,TesoroPerdido),(Cerrada,Escondida))))
+        var grupo=GrupoVivo[EstadoHeroe](heroes,cofre,???,List.empty)
+
+        assert(grupo.cantidadDeVivos()==3)
       }
       
     }

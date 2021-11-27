@@ -11,6 +11,8 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
     3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembrodis, del botin y de las puertas abiertas)*/
   def puertasVisitadas(): List[Puerta] = ???
   //def recorrerCalabozo(): Habitacion = ???
+  //def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = puertaPrincipal.recorrer(grupo)
+
   def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
     if(puertaPrincipal.puedoSerAbierta(grupo)){
       puertaPrincipal.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo.agregarPuertas(List(puertaPrincipal))))
@@ -19,6 +21,7 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
       GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
     }
   }
+
 }
 
 case class Puerta(habitacion: Option[Habitacion], dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
@@ -35,6 +38,19 @@ case class Puerta(habitacion: Option[Habitacion], dificultades : List[Dificultad
   def abrirPuerta() : Puerta = this.copy(dificultades = List())
 
   def estaAbierta(): Boolean = dificultades.isEmpty
+
+  /*
+  def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
+    if(puedoSerAbierta(grupo)){
+      val puertaNueva = this.copy().abrirPuerta()
+      habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo.agregarPuertas(List(puertaNueva))))
+    }
+    else{
+      GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
+    }
+  }
+
+   */
 }
 
 trait Dificultad{ //TODO: Desarrollar las puertas

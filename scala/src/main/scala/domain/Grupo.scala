@@ -7,12 +7,14 @@ abstract class Grupo[T <: EstadoHeroe](val heroes: List[T], val cofre: Cofre, va
   /*def map[R <: T](funcion: T => R) : Grupo[R] = ???*/
   def transformarHeroes(funcion: T => T ): Grupo[T] = ???
   def masLento() : EstadoHeroe = ???
+  def conMasNivel(): EstadoHeroe
   def fuerzaTotal() : Int = ???
   def pelear(heroeExtranjero : EstadoHeroe) : Grupo[EstadoHeroe] = ???
   def getLider() : Option[EstadoHeroe] = ???
   def filter(funcion: T => Boolean) : Grupo[T] = ???
   def exists(funcion: T => Boolean): Boolean = ???
   def agregarPuertas(puertasNuevas: List[Puerta]): Grupo[T]
+  def puntaje(): Int
 }
 
 case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _habitacion: Habitacion, _puertas: List[Puerta]) extends Grupo(_heroes, _cofre, _habitacion, _puertas) {
@@ -36,6 +38,14 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _ha
       menor = h
     })
     menor
+  }
+
+  override def conMasNivel(): EstadoHeroe = {
+    var mayor = getLider().get
+    heroes.foreach(h => if (h.heroe.nivel > mayor.heroe.nivel) {
+      mayor = h
+    })
+    mayor
   }
 
   // TODO : Se usa para enfrentar al heroe si no es compatible
@@ -64,16 +74,20 @@ case class GrupoVivo[T <: EstadoHeroe](_heroes : List[T], _cofre : Cofre,val _ha
   override def transformarHeroes(funcion: T => T ): Grupo[T] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
 
   override def agregarPuertas(puertasNuevas: List[Puerta]): Grupo[T] = this.copy(_puertas = _puertas ::: puertasNuevas)
+
+  override def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + cofre.items.size + conMasNivel().heroe.nivel
 }
 
 
 case class GrupoMuerto[T <: EstadoHeroe](val _heroes : List[T],val _cofre : Cofre, _habitacion: Habitacion, _puertas: List[Puerta]) extends Grupo(_heroes, _cofre, _habitacion, _puertas){
   override def agregarHeroe(heroeExtranjero: Vivo): Grupo[EstadoHeroe] = this.copy();
   override def masLento() : EstadoHeroe= ???
+  override def conMasNivel() : EstadoHeroe = ???
   override def fuerzaTotal() :Int = ???
   override def transformarHeroes(funcion: T => T ): Grupo[T] = this.copy();
   override def getLider(): Option[EstadoHeroe] = None
   override def agregarPuertas(puertasNuevas: List[Puerta]): Grupo[T] = this.copy()
+  override def puntaje(): Int = 0
 }
 
 abstract class EstadoHeroe(val heroe : Heroe){
@@ -147,7 +161,16 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   def elegirPuerta(grupo: Grupo[EstadoHeroe]):Puerta = criterioEleccion match {
     case Heroico => grupo.puertas.filter(puerta => puerta.estaAbierta()).head
     case Ordenado => grupo.puertas.filter(puerta => puerta.estaAbierta()).head
-    case Vidente => ???
+    /*
+    case Vidente => grupo.puertas.map(puerta => {
+      if(puerta.puedoSerAbierta(grupo)){
+        puerta.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo))
+      }
+      else{
+        GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
+      }
+    }.puntaje() ).sorted
+    */
     case _ => ???
   }
 
