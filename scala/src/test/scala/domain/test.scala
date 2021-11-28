@@ -70,7 +70,7 @@ class test extends AnyFreeSpec {
   }
 
   "Calabozo" - {
-    val habitacionA : Habitacion()
+    val habitacionA :
     val habitacionB : Habitacion()
     val habitacionC : Habitacion()
     val habitacionD : Habitacion()
@@ -83,7 +83,7 @@ class test extends AnyFreeSpec {
     val habitacionK : Habitacion()
 
     val puertaEntrada : Puerta = Puerta(Some(habitacionA))
-    val puertaAB: Puerta = Puerta(Some(habitacionB))
+    val puertaAB: Puerta = Puerta(Habitacion(NoPasaNada,List(puertaAB)),List(Cerrada))
     val puertaBC: Puerta = Puerta(Some(habitacionC))
     val puertaCD: Puerta = Puerta(Some(habitacionD))
     val puertaDE: Puerta = Puerta(Some(habitacionE))

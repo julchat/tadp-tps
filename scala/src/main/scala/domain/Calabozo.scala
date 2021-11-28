@@ -1,9 +1,11 @@
 package domain
 
+import com.sun.net.httpserver.Authenticator.Failure
+
 import scala.util.Try
 case class GrupoMurioException() extends Exception("Se murio el grupo")
 case class GrupoPerdidoException() extends Exception ("No hay mas puertas para abrir")
-trait Condicion extends (GrupoVivo[EstadoHeroe] => Boolean)
+trait Condicion extends (GrupoVivo => Boolean)
 
 case class SeEncontroLaSalidaException() extends RuntimeException
 
@@ -15,25 +17,31 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   def puertasVisitadas(): List[Puerta] = ???
   //def recorrerCalabozo(): Habitacion = ???
   //def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = puertaPrincipal.recorrer(grupo)
-  def recorrerTodoElCalabozo(grupo : GrupoVivo[EstadoHeroe]):Grupo[EstadoHeroe]  = {
-    val recorrido: Try[Grupo[EstadoHeroe]] =
+  def recorrerTodoElCalabozo(grupo : GrupoVivo):Grupo  = {
+    val recorrido: Try[Grupo] =
     Try {
       var puertaElegida : Option[Puerta] = Some(puertaPrincipal)
+      var grupoModificable : GrupoVivo = grupo
       while (puertaElegida != puertaSalida) {
-        puertaElegida = (recorrer(grupo, puertaElegida) match {
-          case GrupoVivo(heroes, cofre, habitacion, puertas) => grupo.getLider().get.heroe.elegirPuerta(grupo)
-          case GrupoMuerto(heroes, cofre) => throw new GrupoMurioException()
-          case GrupoPerdido() => throw new GrupoPerdidoException()
-        })
-      }.recover({
-        case GrupoMurioException() => GrupoMuerto()
+        recorrer(grupoModificable, puertaElegida) match {
+          case GrupoVivo(heroes, cofre, habitacion, puertas) => puertaElegida = grupo.getLider().get.heroe.elegirPuerta(grupo)
+          case GrupoMuerto(heroes, cofre) => throw GrupoMurioException()
+          case GrupoPerdido() => throw GrupoPerdidoException()
+        }
+      }
+
+    }.recover({
+        case GrupoMurioException() => ???
         /*      case GrupoSeQuedoSinPuertas =>
       case GrupoExitoso =>*/
       })
-    }
   }
-  def recorrer(grupo: GrupoVivo[EstadoHeroe], puertaElegida : Option[Puerta]): Grupo[EstadoHeroe] = {
-    puertaElegida.fold(GrupoPerdido[EstadoHeroe])(puerta =>  )
+  def recorrer(grupo: GrupoVivo, puertaElegida : Option[Puerta]): Grupo = {
+    val unRecorrido : Try[Grupo] = Try {
+      puertaElegida.fold(throw GrupoPerdidoException())(puerta => puerta.abrirPuerta().habitacion.recorrerHabitacion(grupo))
+    }.recover({
+      case GrupoPerdidoException() => GrupoPerdido()
+    })
 /*    if(puertaPrincipal.puedoSerAbierta(grupo)){
       puertaPrincipal.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo.agregarPuertas(List(puertaPrincipal))))
     }
@@ -45,7 +53,7 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
 }
 
 case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
-  type Condicion = (GrupoVivo[EstadoHeroe] => Boolean)
+  type Condicion = (GrupoVivo => Boolean)
   val condicionBase: Condicion = grupo => {
     grupo.heroes.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
       case Ladrón(habilidadBase) => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 20
@@ -53,7 +61,7 @@ case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // 
     })
   }
 
-  def puedoSerAbierta(grupo: GrupoVivo[EstadoHeroe]): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
+  def puedoSerAbierta(grupo: GrupoVivo): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
 
   def abrirPuerta() : Puerta = this.copy(dificultades = List())
 
@@ -74,7 +82,7 @@ case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // 
 }
 
 trait Dificultad{ //TODO: Desarrollar las puertas
-  def puedenSuperarDificultad(grupo: GrupoVivo[EstadoHeroe]): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
+  def puedenSuperarDificultad(grupo: GrupoVivo): Boolean = condicionesParaAbrir.exists(condicion => condicion.apply(grupo))
   def condicionesParaAbrir() : List[Condicion]
 }
 
@@ -116,7 +124,7 @@ case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
 
 case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
 
-  def recorrerHabitacion(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
+  def recorrerHabitacion(grupo: GrupoVivo): Grupo = {
     situacion match{
       case NoPasaNada => grupo;
       case TesoroPerdido(item) => grupo.agregarABotin(item);
@@ -124,7 +132,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
       case TrampaDeLeones => grupo.transformarHeroes( h => h.matarCondicion(grupo.masLento()) );
       // case Encuentro(personalidad) => grupo //Map con aplicacion parcial para ver como se lleva con el lider?
       case Encuentro(heroeExtranjero : Vivo) => {
-        type Personalidad = (Grupo[EstadoHeroe] => Boolean)
+        type Personalidad = (GrupoVivo => Boolean)
         val personalidadEncuentro : Personalidad = heroeExtranjero.heroe.compatibilidad.criterio;
         val personalidadLider : Personalidad = grupo.getLider().get.heroe.compatibilidad.criterio;
         if(personalidadEncuentro.apply(grupo) && personalidadLider.apply(grupo.agregarHeroe(heroeExtranjero))){
@@ -137,7 +145,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
     }
   }
 
-  def seguirRecorrido(grupo: GrupoVivo[EstadoHeroe]): Grupo[EstadoHeroe] = {
+/*  def seguirRecorrido(grupo: GrupoVivo): Grupo = {
     val grupoActualizado = grupo.agregarPuertas(puertas)
     val puertaElegida: Puerta = grupoActualizado.getLider().fold(throw new SeEncontroLaSalidaException())(lider => lider.heroe.elegirPuerta(grupo))
 
@@ -145,9 +153,8 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
       puertaElegida.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo))
     }
     else{
-      GrupoMuerto()[EstadoHeroe]
-    }
-  }
+      GrupoMuerto(heroesMuertos = grupo.heroes, cofre = grupo.cofre)
+    }*/
 }
 
 trait Situacion
