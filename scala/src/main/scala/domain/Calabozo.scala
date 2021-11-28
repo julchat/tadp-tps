@@ -45,21 +45,21 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   def mejorGrupo(grupos: List[GrupoVivo]): GrupoVivo = {
     grupos.sortBy(g => this.recorrerTodoElCalabozo(g).puntaje()).last
   }
+
+  def informarCuantosNivelesNecesitaElGrupo(grupoVivo: GrupoVivo) : Unit = {
+  cuantosNivelesNecesitaElGrupo(grupoVivo).fold(println("El grupo fallaba incluso con 20 niveles"))(n => println("El grupo tuvo exito con "+ n +" niveles"))
+  }
+
   def cuantosNivelesNecesitaElGrupo(grupoVivo: GrupoVivo): Option[Int] = {
     val nivelesMaximo: List[Int] = (0 to 20).toList
-    val buscarNivel: Try[Some[Int]] = Try {
-      nivelesMaximo.foldRight(Some(0))((nivel,algo) => this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(nivel) match {
+    val buscarNivel: Try[Option[Int]] = Try {
+      nivelesMaximo.foldRight(0)((nivel,algo) => (this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(nivel)) match {
         case GrupoVivo(heroes,cofre,habitacion,puertaElegida) => throw RecorridoExitoso(nivel)
-        case _ => Some(nivel)
+        case _ => nivel
       }))
-
-     /*   recorrer(grupoVivo) match {
-        case GrupoMuerto() => recorrer(grupoVivo.copy(grupoVivo.aumentarUnNivel()))
-      }
-
-      */
+        None
     }.recover({
-
+      case RecorridoExitoso(nivel) => Some(nivel)
     })
     buscarNivel.get
   }
