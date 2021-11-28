@@ -1,15 +1,14 @@
 package domain;
 
-abstract class Grupo() {
+abstract class Grupo(val heroes : List[EstadoHeroe], val cofre : Cofre) {
   /*def agregarHeroe(heroeExtranjero: Vivo): Grupo = ???*/
   //TODO: Mecanica del recorrido del laberinto
   /*def agregarABotin(item: Item) : Grupo = ???*/
   def cantidadDeVivos(): Int
   def cantidadDeMuertos() : Int
-  def tamañoBotin() : Int
-  def nivelMasAlto() : Int
   def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + tamañoBotin() + nivelMasAlto()
-
+  def tamañoBotin(): Int = cofre.items.size
+  def nivelMasAlto(): Int = heroes.map(h => h.heroe.nivel).max
   /*def transformarHeroes(funcion: T => T ): Grupo[T] = ???*/
   /*def map[R <: T](funcion: T => R) : Grupo[R] = ???
   def masLento() : EstadoHeroe = ???
@@ -24,11 +23,11 @@ abstract class Grupo() {
 }
 
 
-case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) extends Grupo() {
-  def agregarHeroe(heroeExtranjero: Vivo): GrupoVivo = this.copy(heroes = heroes.appended(heroeExtranjero))
-  def filter (funcion: EstadoHeroe => Boolean) : GrupoVivo = this.copy(heroes = heroes.filter(funcion));
+case class GrupoVivo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) extends Grupo(_heroes,_cofre) {
+  def agregarHeroe(heroeExtranjero: Vivo): GrupoVivo = this.copy(_heroes = _heroes.appended(heroeExtranjero))
+  def filter (funcion: EstadoHeroe => Boolean) : GrupoVivo = this.copy(_heroes = _heroes.filter(funcion));
   def exists (funcion: EstadoHeroe => Boolean) : Boolean = this.heroes.exists(funcion)
-  def agregarABotin(item: Item) : GrupoVivo = this.copy(cofre = cofre.agregarItem(item));
+  def agregarABotin(item: Item) : GrupoVivo = this.copy(_cofre = _cofre.agregarItem(item));
   def cantidadDeMuertos(): Int = {
     heroes.count { unHeroe => !unHeroe.estoyVivo() };
   }
@@ -39,7 +38,12 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
   }
 
   def getLider(): Option[EstadoHeroe] = heroes.find(_.estoyVivo())
-  def recorristeHabitacion(habitacionRecorrida : Habitacion) : GrupoVivo = this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
+  def recorristeHabitacion(habitacionRecorrida : Habitacion) : GrupoVivo = {
+    val grupoNuevo: GrupoVivo = this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
+    println("Se agrego una habitacion recorrida " + grupoNuevo.habitaciones);
+    grupoNuevo
+
+  }
   def masLento(): EstadoHeroe = {
     var menor = getLider().get
     heroes.foreach(h => if (h.getVelocidad() < menor.getVelocidad()) {
@@ -72,7 +76,7 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
   def pelear(heroeExtranjero: EstadoHeroe): GrupoVivo = {
     val fuerzaDelExtranjero = heroeExtranjero.getFuerza()
     if (fuerzaTotal() > fuerzaDelExtranjero) {
-      this.copy(heroes = heroes.map(h => h.subirNivel(1)))
+      this.copy(_heroes = _heroes.map(h => h.subirNivel(1)))
     }
     else {
       // Todos los integrantes(vivos) pierden vida igualitariamente
@@ -85,36 +89,28 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
   def contieneItem(unItem: Item): Boolean = cofre.contieneItem(unItem)
 
   /*override def map[R <: T](funcion: T => R): Grupo[R] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)));*/
-  def transformarHeroes(funcion: EstadoHeroe => EstadoHeroe ): GrupoVivo = this.copy(heroes = heroes.map(unHeroe => funcion.apply(unHeroe)))
+  def transformarHeroes(funcion: EstadoHeroe => EstadoHeroe ): GrupoVivo = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
 
-  override def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + cofre.items.size + conMasNivel().heroe.nivel
-
-  override def tamañoBotin(): Int = cofre.items.size
-
-  override def nivelMasAlto(): Int = heroes.map(h => h.heroe.nivel).max
+  def aumentarNiveles(niveles: Int): GrupoVivo = {
+    this.copy(_heroes = _heroes.map(h => h.subirNivel(niveles)))
+  }
 }
 
 
-case class GrupoMuerto(heroesMuertos: List[EstadoHeroe], cofre : Cofre ) extends Grupo(){
+case class GrupoMuerto(heroesMuertos: List[EstadoHeroe], _cofre : Cofre ) extends Grupo(heroesMuertos, _cofre){
 
   override def cantidadDeVivos(): Int = 0
 
   override def cantidadDeMuertos(): Int = heroesMuertos.length
 
-  override def tamañoBotin(): Int = cofre.items.size
-
-  override def nivelMasAlto(): Int = heroesMuertos.map(h => h.heroe.nivel).max
 }
 
-case class GrupoPerdido() extends Grupo() {
+case class GrupoPerdido(val _heroes : List[EstadoHeroe], val _cofre : Cofre) extends Grupo(_heroes, _cofre) {
 
   override def cantidadDeVivos(): Int = 0
 
-  override def cantidadDeMuertos(): Int = 0
+  override def cantidadDeMuertos(): Int = _heroes.length
 
-  override def tamañoBotin(): Int = 0
-
-  override def nivelMasAlto(): Int = 0
 }
 
 abstract class EstadoHeroe(val heroe : Heroe){
@@ -188,7 +184,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   def elegirPuerta(grupo: GrupoVivo):GrupoVivo = criterioEleccion match {
     case Heroico => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.lastOption)
     case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
-    case Vidente => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo).puntaje()).headOption)
+    case Vidente => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo).puntaje()).lastOption)
   }
 
   // DONDE PONGO ESTO??

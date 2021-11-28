@@ -72,7 +72,7 @@ class test extends AnyFreeSpec {
   }
 
   "Calabozo - con grupo perdido" - {
-    val heroeAEncontrarse: Vivo = Vivo(Heroe(Atributos(10,2,50),5,25,Mago(List(HechizoAprendible(15,Vislumbrar))),Bigotes,Heroico));
+   /* val heroeAEncontrarse: Vivo = Vivo(Heroe(Atributos(10,2,50),5,25,Mago(List(HechizoAprendible(15,Vislumbrar))),Bigotes,Heroico));
 
     val puertaCD: Puerta = Puerta(Habitacion/*D*/(MuchosMuchosDardos, List()),List(Escondida));
     val puertaFG: Puerta = Puerta(Habitacion/*G*/(TrampaDeLeones, List()),List(Escondida));
@@ -101,17 +101,15 @@ class test extends AnyFreeSpec {
     val grupoDespDelRecorrido: Grupo = calabozoTenebroso.recorrerTodoElCalabozo(grupoFantastico);
 
     println(grupoDespDelRecorrido.puntaje() + " -> " + grupoDespDelRecorrido.cantidadDeVivos() + " -> " + grupoDespDelRecorrido.cantidadDeMuertos());
-
+*/
   }
 
   "Calabozo con grupo exitoso" - {
-    val heroeAEncontrarse: Vivo = Vivo(Heroe(Atributos(10,2,50),5,25,Mago(List(HechizoAprendible(15,Vislumbrar))),Bigotes,Heroico));
 
+    val puertaSalida: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada));
+    val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(NoPasaNada, List(puertaSalida)),List(Cerrada));
 
-    val puertaAB: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada,Escondida));
-    val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(NoPasaNada, List(puertaAB)),List(Escondida,Cerrada));
-
-    val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaAB);
+    val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
 
     var atributos = Atributos(100, 50, 80)
     var atributosMasLento = Atributos(100, 5, 80)
@@ -122,13 +120,13 @@ class test extends AnyFreeSpec {
     val mago = Vivo(Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico))
 
     val heroicos: List[EstadoHeroe] = List(ladron,guerrerouno,guerrerodos,mago);
-    var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
+    var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
 
     val grupoFantastico: GrupoVivo = new GrupoVivo(heroicos,cofre,List(),null) ;
 
     val grupoDespDelRecorrido: Grupo = calabozoTenebroso.recorrerTodoElCalabozo(grupoFantastico);
 
-    println(grupoDespDelRecorrido.puntaje() + " -> " + grupoDespDelRecorrido.cantidadDeVivos() + " -> " + grupoDespDelRecorrido.cantidadDeMuertos());
+    print(grupoDespDelRecorrido.puntaje() + " -> " + grupoDespDelRecorrido.cantidadDeVivos() + " -> " + grupoDespDelRecorrido.cantidadDeMuertos());
 
   }
 

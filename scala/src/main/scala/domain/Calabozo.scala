@@ -1,61 +1,69 @@
 package domain
 
-import com.sun.net.httpserver.Authenticator.Failure
-
+import scala.collection.immutable.Range
 import scala.util.Try
 case class GrupoMurioException() extends Exception("Se murio el grupo")
 case class GrupoPerdidoException() extends Exception ("No hay mas puertas para abrir")
+case class RecorridoExitoso(nivel: Int) extends Exception ("Recorrido exitoso con nivel: " + nivel)
 trait Condicion extends (GrupoVivo => Boolean)
 
 case class SeEncontroLaSalidaException() extends RuntimeException
 
 class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
-  //TODO: Modelar como estarian las habitaciones y las puertas aca
-  /*  1. Va a ver que puertas estan abiertas
-    2. Va a elegir una puerta el lider => si es la de salida tengo que salir
-    3. Va a enfrentarse a lo que haya en la situacion de la puerta abierta => cambios en el grupo (tanto de los miembrodis, del botin y de las puertas abiertas)*/
-  def puertasVisitadas(): List[Puerta] = ???
-  //def recorrerCalabozo(): Habitacion = ???
-  //def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = puertaPrincipal.recorrer(grupo)
+
   def recorrerTodoElCalabozo(grupo : GrupoVivo):Grupo  = {
     val recorrido: Try[Grupo] =
     Try {
       var puertaElegida : Option[Puerta] = Some(puertaPrincipal)
       var grupoModificable : GrupoVivo = grupo.copy(puertaElegida = Some(puertaPrincipal))
 
-      while (grupoModificable.puertaElegida != puertaSalida) {
+      while (grupoModificable.puertaElegida.get != puertaSalida) {
         recorrer(grupoModificable) match{
-          case GrupoVivo(heroes, cofre, habitaciones, puerta) => grupoModificable = grupoModificable.getLider().get.heroe.elegirPuerta(grupo)
+          case g: GrupoVivo => grupoModificable = g.getLider().get.heroe.elegirPuerta(g);
           case GrupoMuerto(heroes, cofre) => print("El grupo ripeo, abortando") ; throw GrupoMurioException()
-          case GrupoPerdido() => throw GrupoPerdidoException()
+          case GrupoPerdido(heroes, cofre) => throw GrupoPerdidoException()
         }
       }
       grupoModificable
     }.recover({
-
         case GrupoMurioException() => GrupoMuerto(List(),Cofre(List(),List(),0));
-        case GrupoPerdidoException() => GrupoPerdido();
-        /*      case GrupoSeQuedoSinPuertas =>
-      case GrupoExitoso =>*/
+        case GrupoPerdidoException() => GrupoPerdido(List(),Cofre(List(),List(),0));
+
       })
       recorrido.get
   }
   def recorrer(grupo: GrupoVivo): Grupo = {
     val unRecorrido : Try[Grupo] = Try {
       grupo.puertaElegida.fold(throw GrupoPerdidoException())(puerta => puerta.habitacion.recorrerHabitacion(grupo))
-      grupo
     }.recover({
       case GrupoPerdidoException() => print("El grupo se perdio. Aventura fracasada")
-        GrupoPerdido()
+        GrupoPerdido(List(),Cofre(List(),List(),0));
     })
     unRecorrido.get
   }
-/*    if(puertaPrincipal.puedoSerAbierta(grupo)){
-      puertaPrincipal.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo.agregarPuertas(List(puertaPrincipal))))
-    }
-    else{
-      GrupoPerdido[EstadoHeroe]()
-    }*/
+
+  def mejorGrupo(grupos: List[GrupoVivo]): GrupoVivo = {
+    grupos.sortBy(g => this.recorrerTodoElCalabozo(g).puntaje()).last
+  }
+  def cuantosNivelesNecesitaElGrupo(grupoVivo: GrupoVivo): Option[Int] = {
+    val nivelesMaximo: List[Int] = (0 to 20).toList
+    val buscarNivel: Try[Some[Int]] = Try {
+      nivelesMaximo.foldRight(Some(0))((nivel,algo) => this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(nivel) match {
+        case GrupoVivo(heroes,cofre,habitacion,puertaElegida) => throw RecorridoExitoso(nivel)
+        case _ => Some(nivel)
+      }))
+
+     /*   recorrer(grupoVivo) match {
+        case GrupoMuerto() => recorrer(grupoVivo.copy(grupoVivo.aumentarUnNivel()))
+      }
+
+      */
+    }.recover({
+
+    })
+    buscarNivel.get
+  }
+
 }
 
 case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
@@ -147,7 +155,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
       }
      //case Encuentro(heroExtranjero : Vivo) => if(grupo.getLider().get.esCompatible(grupo.agregarHeroe(heroExtranjero)) && heroExtranjero.heroe.esCompatible(grupo)) La otra opcion era hacer el pattern matching en esCompatible
     }
-    grupoListo.recorristeHabitacion(this).verificarVivo()
+    grupoListo.recorristeHabitacion(this).verificarVivo();
   }
 
 /*  def seguirRecorrido(grupo: GrupoVivo): Grupo = {
