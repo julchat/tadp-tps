@@ -1,11 +1,15 @@
 package domain;
 
 abstract class Grupo() {
-  def agregarHeroe(heroeExtranjero: Vivo): Grupo = ???
+  /*def agregarHeroe(heroeExtranjero: Vivo): Grupo = ???*/
   //TODO: Mecanica del recorrido del laberinto
-  def agregarABotin(item: Item) : Grupo = ???
-  def cantidadDeVivos(): Int = ???
-  def puntaje(): Int = ???
+  /*def agregarABotin(item: Item) : Grupo = ???*/
+  def cantidadDeVivos(): Int
+  def cantidadDeMuertos() : Int
+  def tamañoBotin() : Int
+  def nivelMasAlto() : Int
+  def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + tamañoBotin() + nivelMasAlto()
+
   /*def transformarHeroes(funcion: T => T ): Grupo[T] = ???*/
   /*def map[R <: T](funcion: T => R) : Grupo[R] = ???
   def masLento() : EstadoHeroe = ???
@@ -20,7 +24,7 @@ abstract class Grupo() {
 }
 
 
-case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habitacion: Habitacion,val puertas: List[Puerta]) extends Grupo() {
+case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) extends Grupo() {
   def agregarHeroe(heroeExtranjero: Vivo): GrupoVivo = this.copy(heroes = heroes.appended(heroeExtranjero))
   def filter (funcion: EstadoHeroe => Boolean) : GrupoVivo = this.copy(heroes = heroes.filter(funcion));
   def exists (funcion: EstadoHeroe => Boolean) : Boolean = this.heroes.exists(funcion)
@@ -29,12 +33,13 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
     heroes.count { unHeroe => !unHeroe.estoyVivo() };
   }
 
+  def filtrarPuertasAbribles : List[Puerta] = habitaciones.flatMap(h => h.puertas.filter(p => p.puedoSerAbierta(this)))
    override def cantidadDeVivos(): Int = {
     heroes.length - cantidadDeMuertos();
   }
 
   def getLider(): Option[EstadoHeroe] = heroes.find(_.estoyVivo())
-
+  def recorristeHabitacion(habitacionRecorrida : Habitacion) : GrupoVivo = this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
   def masLento(): EstadoHeroe = {
     var menor = getLider().get
     heroes.foreach(h => if (h.getVelocidad() < menor.getVelocidad()) {
@@ -55,8 +60,15 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
     heroes.foldRight[Int](0)(_.heroe.getFuerza()+_)
   }
 
+  def verificarVivo() : Grupo = {
+    if (cantidadDeVivos() != 0)
+    this.copy()
+    else
+      GrupoMuerto(heroes,cofre)
+  }
+
   // ENCUENTRO ------------------------------------------
-  override def pelear(heroeExtranjero: EstadoHeroe): Grupo = {
+  def pelear(heroeExtranjero: EstadoHeroe): GrupoVivo = {
     val fuerzaDelExtranjero = heroeExtranjero.getFuerza()
     if (fuerzaTotal() > fuerzaDelExtranjero) {
       this.copy(heroes = heroes.map(h => h.subirNivel(1)))
@@ -67,42 +79,41 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
     }
   }
 
-  // FUNCIONES PARA COMPATIBILIDAD DEL ENCUENTRO
   def hayLadrones(): Boolean = heroes.exists(h => h.esLadron())
 
   def contieneItem(unItem: Item): Boolean = cofre.contieneItem(unItem)
 
   /*override def map[R <: T](funcion: T => R): Grupo[R] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)));*/
-  def transformarHeroes(funcion: EstadoHeroe => EstadoHeroe ): Grupo = this.copy(heroes = heroes.map(unHeroe => funcion.apply(unHeroe)))
-
-  def agregarPuertas(puertasNuevas: List[Puerta]): Grupo = this.copy(puertas = puertas ::: puertasNuevas)
+  def transformarHeroes(funcion: EstadoHeroe => EstadoHeroe ): GrupoVivo = this.copy(heroes = heroes.map(unHeroe => funcion.apply(unHeroe)))
 
   override def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + cofre.items.size + conMasNivel().heroe.nivel
+
+  override def tamañoBotin(): Int = cofre.items.size
+
+  override def nivelMasAlto(): Int = heroes.map(h => h.heroe.nivel).max
 }
 
 
 case class GrupoMuerto(heroesMuertos: List[EstadoHeroe], cofre : Cofre ) extends Grupo(){
 
-  override def puntaje(): Int = 0
-  /*  override def cantidadDeVivos(): Int = 0
-  /*override def transformarHeroes(funcion: T => T ): Grupo[T] = this.copy();*/
-  override def getLider(): Option[EstadoHeroe] = None
-  /*override def agregarPuertas(puertasNuevas: List[Puerta]): Grupo[T] = this.copy()*/
+  override def cantidadDeVivos(): Int = 0
 
+  override def cantidadDeMuertos(): Int = heroesMuertos.length
 
-  override def conMasNivel(): EstadoHeroe = ???
+  override def tamañoBotin(): Int = cofre.items.size
 
-  override def agregarPuertas(puertasNuevas: List[Puerta]): Grupo[Nothing] = ???*/
+  override def nivelMasAlto(): Int = heroesMuertos.map(h => h.heroe.nivel).max
 }
 
 case class GrupoPerdido() extends Grupo() {
-/*  override def cantidadDeVivos(): Int = ???
 
-  override def conMasNivel(): EstadoHeroe = ???
+  override def cantidadDeVivos(): Int = ???
 
-  override def agregarPuertas(puertasNuevas: List[Puerta]): Grupo[Nothing] = ???
+  override def cantidadDeMuertos(): Int = ???
 
-  override def puntaje(): Int = ???*/
+  override def tamañoBotin(): Int = ???
+
+  override def nivelMasAlto(): Int = ???
 }
 
 abstract class EstadoHeroe(val heroe : Heroe){
@@ -173,20 +184,10 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
     }
   }
 
-  def elegirPuerta(grupo: GrupoVivo):Option[Puerta] = criterioEleccion match {
-    case Heroico => grupo.puertas.filter(puerta => puerta.estaAbierta()).head
-    case Ordenado => grupo.puertas.filter(puerta => puerta.estaAbierta()).head
-    /*
-    case Vidente => grupo.puertas.map(puerta => {
-      if(puerta.puedoSerAbierta(grupo)){
-        puerta.abrirPuerta().habitacion.fold(throw new SeEncontroLaSalidaException())(habitacion => habitacion.recorrerHabitacion(grupo))
-      }
-      else{
-        GrupoMuerto(_heroes = grupo.heroes,_cofre = grupo.cofre,_habitacion = grupo.habitacion,_puertas = grupo.puertas)
-      }
-    }.puntaje() ).sorted
-    */
-    case _ => ???
+  def elegirPuerta(grupo: GrupoVivo):GrupoVivo = criterioEleccion match {
+    case Heroico => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.lastOption)
+    case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
+    case Vidente => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo).puntaje()).headOption)
   }
 
   // DONDE PONGO ESTO??
