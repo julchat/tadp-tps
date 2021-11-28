@@ -10,7 +10,7 @@ trait Condicion extends (GrupoVivo => Boolean)
 case class SeEncontroLaSalidaException() extends RuntimeException
 
 class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
-
+//grupo : estadorrecorrido
   def recorrerTodoElCalabozo(grupo : GrupoVivo):Grupo  = {
     val recorrido: Try[Grupo] =
     Try {
@@ -42,7 +42,7 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
     unRecorrido.get
   }
 
-  def mejorGrupo(grupos: List[GrupoVivo]): GrupoVivo = {
+  def mejorGrupo(grupos: List[GrupoVivo]): Grupo = {
     grupos.sortBy(g => this.recorrerTodoElCalabozo(g).puntaje()).last
   }
 
@@ -52,7 +52,11 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
 
   def cuantosNivelesNecesitaElGrupo(grupoVivo: GrupoVivo): Option[Int] = {
     val nivelesMaximo: List[Int] = (0 to 20).toList
-    val buscarNivel: Try[Option[Int]] = Try {
+    nivelesMaximo.find(numero => this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(numero)) match {
+      case gv : GrupoVivo => true
+      case _ => false
+    })
+/*    val buscarNivel: Try[Option[Int]] = Try {
       nivelesMaximo.foldRight(0)((nivel,algo) => this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(nivel)) match {
         case GrupoVivo(heroes,cofre,habitacion,puertaElegida) => throw RecorridoExitoso(nivel)
         case _ => nivel
@@ -61,9 +65,8 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
     }.recover({
       case RecorridoExitoso(nivel) => Some(nivel)
     })
-    buscarNivel.get
+    buscarNivel.get*/
   }
-
 }
 
 case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
@@ -77,7 +80,7 @@ case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // 
 
   def puedoSerAbierta(grupo: GrupoVivo): Boolean = condicionBase(grupo) || dificultades.forall(unaDificultad => unaDificultad.puedenSuperarDificultad(grupo))
 
-  def estaAbierta(): Boolean = dificultades.isEmpty
+  def estaAbierta(): Boolean = dificultades.isEmpty //me parece que no lo usamos
 
   /*
   def recorrer(grupo: Grupo[EstadoHeroe]): Grupo[EstadoHeroe] = {
@@ -102,9 +105,9 @@ case object Cerrada extends Dificultad {
   override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = grupo => grupo.cofre.items.contains(Llave)
     val condicion2 : Condicion = grupo => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case Ladrón(habilidadBase)  => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 10
+      case Ladrón(habilidadBase)  => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 10 || grupo.cofre.items.contains(Ganzúas)
       case _ => false
-    }) || grupo.cofre.items.contains(Ganzúas)
+    })
     List(condicion1,condicion2)
   }
 }
@@ -116,7 +119,7 @@ case object Escondida extends Dificultad{
       case _ => false
     })
     val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case Mago(hechizosAprendibles) => estadoHeroe.heroe.trabajo.asInstanceOf[Mago].conoceElHechizo(Vislumbrar,estadoHeroe.heroe.nivel);
+      case m : Mago => m.conoceElHechizo(Vislumbrar,estadoHeroe.heroe.nivel);
       case _ => false
     })
     List(condicion1,condicion2)
@@ -126,7 +129,7 @@ case object Escondida extends Dificultad{
 case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
   override def condicionesParaAbrir() : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case Mago(hechizosAprendibles)  => estadoHeroe.heroe.trabajo.asInstanceOf[Mago].conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
+      case m : Mago  => m.conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
       case _ => false
     })
     List(condicion1)
@@ -137,6 +140,7 @@ case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
 case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
 
   def recorrerHabitacion(grupo: GrupoVivo): Grupo = {
+    //Con polimorfismo queda un poco mas claro y no tengo que modificar este codigo
     val grupoListo : GrupoVivo = situacion match{
       case NoPasaNada => grupo;
       case TesoroPerdido(item) => grupo.agregarABotin(item);

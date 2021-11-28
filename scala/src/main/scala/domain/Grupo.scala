@@ -42,14 +42,15 @@ case class GrupoVivo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val ha
     val grupoNuevo: GrupoVivo = this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
     println("Se agrego una habitacion recorrida " + grupoNuevo.habitaciones);
     grupoNuevo
-
   }
+  //Aca hay que devolver un Vivo
   def masLento(): EstadoHeroe = {
-    var menor = getLider().get
+    heroes.sortBy(uh => uh.getVelocidad()).head
+    /*var menor = getLider().get
     heroes.foreach(h => if (h.getVelocidad() < menor.getVelocidad()) {
       menor = h
     })
-    menor
+    menor*/
   }
   def conMasNivel(): EstadoHeroe = {
     var mayor = getLider().get
@@ -76,7 +77,7 @@ case class GrupoVivo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val ha
   def pelear(heroeExtranjero: EstadoHeroe): GrupoVivo = {
     val fuerzaDelExtranjero = heroeExtranjero.getFuerza()
     if (fuerzaTotal() > fuerzaDelExtranjero) {
-      this.copy(_heroes = _heroes.map(h => h.subirNivel(1)))
+      aumentarNiveles(1)
     }
     else {
       // Todos los integrantes(vivos) pierden vida igualitariamente
@@ -161,7 +162,6 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
 
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int ,val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
   //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
-
   def getFuerza() : Int = {
     val adicional : Int =
     trabajo match {
@@ -180,7 +180,8 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
       case _ => false
     }
   }
-
+ //atributo de la funcion para criterioEleccion a la cual le apliquemos el grupo
+  //refactor para abstraer lo que esta en comun
   def elegirPuerta(grupo: GrupoVivo):GrupoVivo = criterioEleccion match {
     case Heroico => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.lastOption)
     case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
@@ -198,7 +199,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }*/
 }
 
-case class Atributos(val fuerzaBase : Int, val velocidadBase : Int, val saludBase : Int)
+case class Atributos(val fuerzaBase : Int, val velocidadBase : Int)
 
 trait Trabajo
 
@@ -238,13 +239,10 @@ case object Introvertido extends Compatibilidad {
   override val criterio: Personalidad = _.heroes.length <= 3
 }
 case object Bigotes extends Compatibilidad{
-  override val criterio: Personalidad = _.heroes.find(h => h.heroe.trabajo match {
+  override val criterio: Personalidad = ! _.heroes.exists(h => h.heroe.trabajo match {
     case Ladrón(a) => true
     case _ => false
-  }) match {
-    case Some(a) => false
-    case None => true
-  }
+  })
 }
 case class Interesados(objParticular: Item) extends Compatibilidad{
   override val criterio: Personalidad = _.cofre.contieneItem(objParticular)
