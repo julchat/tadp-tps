@@ -66,7 +66,50 @@ class test extends AnyFreeSpec {
 
       assert(calabozo.recorrer(grupo).cantidadDeVivos() == 3)
     }
+    "el lider de un grupo es el primer miembro del grupo" in {
+      var atributos = Atributos(100, 50, 80)
+      var heroes = List(Guerrero, Mago, Ladrón)
+      var grupo = GrupoVivo(heroes, Cofre, Habitacion((NoPasaNada, TrampaDeLeones), Puerta((NoPasaNada, TesoroPerdido), (Cerrada, Escondida))))
+
+      assert(grupo.getLider() == Guerrero)
+    }
+
 
   }
+  "Calabozo y puertas" - {
+    "si una puerta esta CERRADA cualquier heroe puede abrirla si tiene el item llave" in {
+      val atributo = Atributos(100, 50, 80)
+      var heroes = List(Guerrero, Mago)
+      var cofre = Cofre((Llave), ("chuchillo,pistola"), 45)
+      var calabozo=Calabozo(Puerta(),Puerta(Habitacion,Habitacion,(Cerrada)))
+      var grupo = GrupoVivo(heroes, cofre, Habitacion((NoPasaNada, TrampaDeLeones), Puerta((NoPasaNada, TesoroPerdido), (Cerrada, Escondida))))
+      assert(calabozo.puertaPrincipal.puedoSerAbierta(grupo))
+    }
+    "si una puerta esta CERRADA cualquier cerradura puede ser abierta por un ladron si tiene habilidad mayor  igual que 10" +
+      "o si el grupo tiene el item ganzuas" in {
+      val atributo = Atributos(100, 50, 80)
+      var heroes = List(Guerrero, Mago, Ladrón(20))
+      var cofre = Cofre((Ganzúas), ("chuchillo,pistola"), 45)
+      var calabozo=Calabozo(Puerta(),Puerta(Habitacion,Habitacion,(Cerrada)))
+      var grupo = GrupoVivo(heroes, cofre, Habitacion((NoPasaNada, TrampaDeLeones), Puerta((NoPasaNada, TesoroPerdido), (Cerrada, Escondida))))
+
+      assert(calabozo.puertaPrincipal.puedoSerAbierta(grupo))
+    }
+    "si una puerta esta ESCONDIDA un mago puede encontrarla si conoce el hechizo vislumbrar" in {
+      val atributo = Atributos(100, 50, 80)
+      var heroes = List(Guerrero, Mago((Vislumbrar)))
+      var cofre = Cofre((Llave), ("chuchillo,pistola"), 45)
+      var calabozo=Calabozo(Puerta(),Puerta(Habitacion,Habitacion,(Escondida)))
+      var grupo = GrupoVivo(heroes, cofre, Habitacion((NoPasaNada, TrampaDeLeones), Puerta((NoPasaNada, TesoroPerdido), (Cerrada, Escondida))))
+      assert(calabozo.puertaSalida.puedoSerAbierta(grupo))
+    }
+    "si una puerta esta ESCONDIDA un ladron con 6 o mas de habilidad puede encontarla " in {
+      val atributo = Atributos(100, 50, 80)
+      var heroes = List(Guerrero, Ladrón(10))
+      var cofre = Cofre((Llave), ("chuchillo,pistola"), 45)
+      var calabozo=Calabozo(Puerta(),Puerta(Habitacion,Habitacion,(Escondida)))
+      var grupo = GrupoVivo(heroes, cofre, Habitacion((NoPasaNada, TrampaDeLeones), Puerta((NoPasaNada, TesoroPerdido), (Cerrada, Escondida))))
+      assert(calabozo.puertaSalida.puedoSerAbierta(grupo))
+
 
 }
