@@ -30,16 +30,20 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
           case GrupoPerdido() => throw GrupoPerdidoException()
         }
       }
-
+      grupoModificable
     }.recover({
-        case GrupoMurioException() => ???
+
+        case GrupoMurioException() => GrupoMuerto(List(),Cofre(List(),List(),0));
+        case GrupoPerdidoException() => GrupoPerdido();
         /*      case GrupoSeQuedoSinPuertas =>
       case GrupoExitoso =>*/
       })
+      recorrido.get
   }
   def recorrer(grupo: GrupoVivo): Grupo = {
     val unRecorrido : Try[Grupo] = Try {
       grupo.puertaElegida.fold(throw GrupoPerdidoException())(puerta => puerta.habitacion.recorrerHabitacion(grupo))
+      grupo
     }.recover({
       case GrupoPerdidoException() => print("El grupo se perdio. Aventura fracasada")
         GrupoPerdido()

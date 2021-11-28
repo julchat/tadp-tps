@@ -61,8 +61,9 @@ case class GrupoVivo(val heroes : List[EstadoHeroe], val cofre : Cofre,val habit
   }
 
   def verificarVivo() : Grupo = {
-    if (cantidadDeVivos() != 0)
-    this.copy()
+    if (cantidadDeVivos() != 0){
+      this.copy()
+    }
     else
       GrupoMuerto(heroes,cofre)
   }
@@ -107,13 +108,13 @@ case class GrupoMuerto(heroesMuertos: List[EstadoHeroe], cofre : Cofre ) extends
 
 case class GrupoPerdido() extends Grupo() {
 
-  override def cantidadDeVivos(): Int = ???
+  override def cantidadDeVivos(): Int = 0
 
-  override def cantidadDeMuertos(): Int = ???
+  override def cantidadDeMuertos(): Int = 0
 
-  override def tamañoBotin(): Int = ???
+  override def tamañoBotin(): Int = 0
 
-  override def nivelMasAlto(): Int = ???
+  override def nivelMasAlto(): Int = 0
 }
 
 abstract class EstadoHeroe(val heroe : Heroe){
