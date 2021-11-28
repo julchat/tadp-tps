@@ -159,7 +159,7 @@ case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
   override def getFuerza(): Int = ???
 }
 
-case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int,val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
+case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int ,val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
   //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
 
   def getFuerza() : Int = {

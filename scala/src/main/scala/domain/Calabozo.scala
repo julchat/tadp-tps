@@ -2,8 +2,8 @@ package domain
 
 import scala.collection.immutable.Range
 import scala.util.Try
-case class GrupoMurioException() extends Exception("Se murio el grupo")
-case class GrupoPerdidoException() extends Exception ("No hay mas puertas para abrir")
+case class GrupoMurioException(grupoMuerto: GrupoMuerto) extends Exception("Se murio el grupo")
+case class GrupoPerdidoException(grupoPerdido: GrupoPerdido) extends Exception ("No hay mas puertas para abrir")
 case class RecorridoExitoso(nivel: Int) extends Exception ("Recorrido exitoso con nivel: " + nivel)
 trait Condicion extends (GrupoVivo => Boolean)
 
@@ -20,24 +20,24 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
       while (grupoModificable.puertaElegida.get != puertaSalida) {
         recorrer(grupoModificable) match{
           case g: GrupoVivo => grupoModificable = g.getLider().get.heroe.elegirPuerta(g);
-          case GrupoMuerto(heroes, cofre) => print("El grupo ripeo, abortando") ; throw GrupoMurioException()
-          case GrupoPerdido(heroes, cofre) => throw GrupoPerdidoException()
+          case gm : GrupoMuerto => print("El grupo ripeo, abortando") ; throw GrupoMurioException(gm)
+          case gp: GrupoPerdido => print("El grupo se quedo sin puertas para abrir, abortando"); throw GrupoPerdidoException(gp)
         }
       }
       grupoModificable
     }.recover({
-        case GrupoMurioException() => GrupoMuerto(List(),Cofre(List(),List(),0));
-        case GrupoPerdidoException() => GrupoPerdido(List(),Cofre(List(),List(),0));
+        case GrupoMurioException(gm) => gm
+        case GrupoPerdidoException(gp) => gp
 
       })
       recorrido.get
   }
   def recorrer(grupo: GrupoVivo): Grupo = {
     val unRecorrido : Try[Grupo] = Try {
-      grupo.puertaElegida.fold(throw GrupoPerdidoException())(puerta => puerta.habitacion.recorrerHabitacion(grupo))
+      grupo.puertaElegida.fold(throw GrupoPerdidoException(GrupoPerdido(_heroes = grupo.heroes, _cofre = grupo.cofre)))(puerta => puerta.habitacion.recorrerHabitacion(grupo))
     }.recover({
-      case GrupoPerdidoException() => print("El grupo se perdio. Aventura fracasada")
-        GrupoPerdido(List(),Cofre(List(),List(),0));
+      case GrupoPerdidoException(grupo) => GrupoPerdido(_heroes = grupo.heroes, _cofre = grupo.cofre)
+
     })
     unRecorrido.get
   }
@@ -53,10 +53,10 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   def cuantosNivelesNecesitaElGrupo(grupoVivo: GrupoVivo): Option[Int] = {
     val nivelesMaximo: List[Int] = (0 to 20).toList
     val buscarNivel: Try[Option[Int]] = Try {
-      nivelesMaximo.foldRight(0)((nivel,algo) => (this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(nivel)) match {
+      nivelesMaximo.foldRight(0)((nivel,algo) => this.recorrerTodoElCalabozo(grupoVivo.aumentarNiveles(nivel)) match {
         case GrupoVivo(heroes,cofre,habitacion,puertaElegida) => throw RecorridoExitoso(nivel)
         case _ => nivel
-      }))
+      })
         None
     }.recover({
       case RecorridoExitoso(nivel) => Some(nivel)

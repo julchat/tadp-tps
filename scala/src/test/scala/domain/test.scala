@@ -130,4 +130,35 @@ class test extends AnyFreeSpec {
 
   }
 
+  "Calabozo con grupo muerto" in {
+
+    val puertaSalida: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada));
+    val atributosExtranjero = Atributos(300,50,1000)
+    val asesino = Vivo(Heroe(atributosExtranjero,2,100,Guerrero,Loquitos,Vidente))
+    val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(Encuentro(asesino), List(puertaSalida)),List(Cerrada));
+    val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
+    var atributos = Atributos(5, 50, 5)
+    var atributosMasLento = Atributos(5, 5, 5)
+    var hechizos = List(HechizoAprendible(2, Vislumbrar))
+    val ladron = Vivo(Heroe(atributos, 2, 5, Ladrón(30), Loquitos, Heroico))
+    val guerrerouno = Vivo(Heroe(atributos, 2, 5, Guerrero, Loquitos, Heroico))
+    val guerrerodos = Vivo(Heroe(atributosMasLento, 2, 5, Guerrero, Loquitos, Heroico))
+    val mago = Vivo(Heroe(atributos, 2, 5, Mago(hechizos), Loquitos, Heroico))
+
+
+
+    val heroicos: List[EstadoHeroe] = List(ladron,guerrerouno,guerrerodos,mago);
+    var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
+
+    val grupoFantastico: GrupoVivo = new GrupoVivo(heroicos,cofre,List(),null) ;
+
+    val grupoDespDelRecorrido: Grupo = calabozoTenebroso.recorrerTodoElCalabozo(grupoFantastico);
+
+   print(grupoDespDelRecorrido.puntaje() + " -> " + grupoDespDelRecorrido.cantidadDeVivos() + " -> " + grupoDespDelRecorrido.cantidadDeMuertos());
+    assert(grupoDespDelRecorrido match {
+      case gm : GrupoMuerto => true
+      case _ => false
+    })
+  }
+
 }
