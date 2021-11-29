@@ -8,20 +8,20 @@ class test extends AnyFreeSpec {
   "Trabajos" - {
     "un heroe con 100 de fuerza base y nivel 1 siendo guerrero debe tener 120 de fuerza" in {
 
-      val atributo = Atributos(100, 50, 80)
+      val atributo = Atributos(100, 50)
       val unGuerrero = Heroe(atributo, 1, 100, Guerrero, Introvertido, Heroico)
       assert(unGuerrero.getFuerza() == 120)
     }
     "un ladron con habilidad base 30 y nivel 2 debe tener habilidad final 36" in {
 
-      val atributos = Atributos(100, 50, 80)
+      val atributos = Atributos(100, 50)
       val heroe = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
 
       //assert(heroe.trabajo.habilidadBase == 36)
     }
     "un mago cuando tiene el nivel para aprender un hechizo, adquiera dicho hechizo" in {
 
-      var atributos = Atributos(100, 50, 80)
+      var atributos = Atributos(100, 50)
       var hechizos = List(HechizoAprendible(2, Vislumbrar))
       var heroe = Heroe(atributos, 1, 100, Mago(hechizos), Introvertido, Heroico)
 
@@ -111,8 +111,8 @@ class test extends AnyFreeSpec {
 
     val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
 
-    var atributos = Atributos(100, 50, 80)
-    var atributosMasLento = Atributos(100, 5, 80)
+    var atributos = Atributos(100, 50)
+    var atributosMasLento = Atributos(100, 5)
     var hechizos = List(HechizoAprendible(2, Vislumbrar))
     val ladron = Vivo(Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico))
     val guerrerouno = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
@@ -133,12 +133,12 @@ class test extends AnyFreeSpec {
   "Calabozo con grupo muerto" in {
 
     val puertaSalida: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada));
-    val atributosExtranjero = Atributos(300,50,1000)
+    val atributosExtranjero = Atributos(300,50)
     val asesino = Vivo(Heroe(atributosExtranjero,2,100,Guerrero,Loquitos,Vidente))
     val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(Encuentro(asesino), List(puertaSalida)),List(Cerrada));
     val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
-    var atributos = Atributos(5, 50, 5)
-    var atributosMasLento = Atributos(5, 5, 5)
+    var atributos = Atributos(5, 50)
+    var atributosMasLento = Atributos(5, 5)
     var hechizos = List(HechizoAprendible(2, Vislumbrar))
     val ladron = Vivo(Heroe(atributos, 2, 5, Ladrón(30), Loquitos, Heroico))
     val guerrerouno = Vivo(Heroe(atributos, 2, 5, Guerrero, Loquitos, Heroico))
