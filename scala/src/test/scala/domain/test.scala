@@ -114,12 +114,12 @@ class test extends AnyFreeSpec {
     var atributos = Atributos(100, 50)
     var atributosMasLento = Atributos(100, 5)
     var hechizos = List(HechizoAprendible(2, Vislumbrar))
-    val ladron = Vivo(Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico))
-    val guerrerouno = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
-    val guerrerodos = Vivo(Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico))
-    val mago = Vivo(Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico))
+    val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
+    val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico)
+    val guerrerodos = Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico)
+    val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico)
 
-    val heroicos: List[EstadoHeroe] = List(ladron,guerrerouno,guerrerodos,mago);
+    val heroicos: List[Heroe] = List(ladron,guerrerouno,guerrerodos,mago);
     var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
 
     val grupoFantastico: Grupo = new Grupo(heroicos,cofre,List(),null) ;
@@ -134,20 +134,20 @@ class test extends AnyFreeSpec {
 
     val puertaSalida: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada));
     val atributosExtranjero = Atributos(300,50)
-    val asesino = Vivo(Heroe(atributosExtranjero,2,100,Guerrero,Loquitos,Vidente))
+    val asesino = Heroe(atributosExtranjero,2,100,Guerrero,Loquitos,Vidente)
     val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(Encuentro(asesino), List(puertaSalida)),List(Cerrada));
     val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
     var atributos = Atributos(5, 50)
     var atributosMasLento = Atributos(5, 5)
     var hechizos = List(HechizoAprendible(2, Vislumbrar))
-    val ladron = Vivo(Heroe(atributos, 2, 5, Ladrón(30), Loquitos, Heroico))
-    val guerrerouno = Vivo(Heroe(atributos, 2, 5, Guerrero, Loquitos, Heroico))
-    val guerrerodos = Vivo(Heroe(atributosMasLento, 2, 5, Guerrero, Loquitos, Heroico))
-    val mago = Vivo(Heroe(atributos, 2, 5, Mago(hechizos), Loquitos, Heroico))
+    val ladron = Heroe(atributos, 2, 5, Ladrón(30), Loquitos, Heroico)
+    val guerrerouno = Heroe(atributos, 2, 5, Guerrero, Loquitos, Heroico)
+    val guerrerodos = Heroe(atributosMasLento, 2, 5, Guerrero, Loquitos, Heroico)
+    val mago = Heroe(atributos, 2, 5, Mago(hechizos), Loquitos, Heroico)
 
 
 
-    val heroicos: List[EstadoHeroe] = List(ladron,guerrerouno,guerrerodos,mago);
+    val heroicos: List[Heroe] = List(ladron,guerrerouno,guerrerodos,mago);
     var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
 
    /* val grupoFantastico: GrupoVivo = new GrupoVivo(heroicos,cofre,List(),null) ;

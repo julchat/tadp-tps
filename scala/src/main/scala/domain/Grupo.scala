@@ -1,14 +1,14 @@
 package domain;
 
-case class Grupo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) {
+case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) {
 
   def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + tamañoBotin() + nivelMasAlto()
   def tamañoBotin(): Int = _cofre.items.length
-  def nivelMasAlto(): Int = _heroes.map(h => h.heroe.nivel).max
+  def nivelMasAlto(): Int = _heroes.map(heroe => heroe.nivel).max
 
-  def agregarHeroe(heroeExtranjero: Vivo): Grupo = this.copy(_heroes = _heroes.appended(heroeExtranjero))
-  def filter (funcion: EstadoHeroe => Boolean) : Grupo = this.copy(_heroes = _heroes.filter(funcion));
-  def exists (funcion: EstadoHeroe => Boolean) : Boolean = this._heroes.exists(funcion)
+  def agregarHeroe(heroeExtranjero: Heroe): Grupo = this.copy(_heroes = _heroes.appended(heroeExtranjero))
+  def filter (funcion: Heroe => Boolean) : Grupo = this.copy(_heroes = _heroes.filter(funcion));
+  def exists (funcion: Heroe => Boolean) : Boolean = this._heroes.exists(funcion)
   def agregarABotin(item: Item) : Grupo = this.copy(_cofre = _cofre.agregarItem(item));
   def cantidadDeMuertos(): Int = {
     _heroes.count { unHeroe => !unHeroe.estoyVivo() };
@@ -19,14 +19,14 @@ case class Grupo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val habita
     _heroes.length - cantidadDeMuertos();
   }
 
-  def getLider(): Option[EstadoHeroe] = _heroes.find(_.estoyVivo())
+  def getLider(): Option[Heroe] = _heroes.find(_.estoyVivo())
   def recorristeHabitacion(habitacionRecorrida : Habitacion) : Grupo = {
     val grupoNuevo: Grupo = this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
     println("Se agrego una habitacion recorrida " + grupoNuevo.habitaciones);
     grupoNuevo
   }
   //Aca hay que devolver un Vivo
-  def masLento(): EstadoHeroe = {
+  def masLento(): Heroe = {
     _heroes.sortBy(uh => uh.getVelocidad()).head
     /*var menor = getLider().get
     heroes.foreach(h => if (h.getVelocidad() < menor.getVelocidad()) {
@@ -34,9 +34,9 @@ case class Grupo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val habita
     })
     menor*/
   }
-  def conMasNivel(): EstadoHeroe = {
+  def conMasNivel(): Heroe = {
     var mayor = getLider().get
-    _heroes.foreach(h => if (h.heroe.nivel > mayor.heroe.nivel) {
+    _heroes.foreach(h => if (h.nivel > mayor.nivel) {
       mayor = h
     })
     mayor
@@ -44,11 +44,11 @@ case class Grupo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val habita
 
   // TODO : Se usa para enfrentar al heroe si no es compatible
   def fuerzaTotal(): Int = {
-    _heroes.foldRight[Int](0)(_.heroe.getFuerza()+_)
+    _heroes.foldRight[Int](0)(_.getFuerza()+_)
   }
 
   // ENCUENTRO ------------------------------------------
-  def pelear(heroeExtranjero: EstadoHeroe): Grupo = {
+  def pelear(heroeExtranjero: Heroe): Grupo = {
     val fuerzaDelExtranjero = heroeExtranjero.getFuerza()
     if (fuerzaTotal() > fuerzaDelExtranjero) {
       aumentarNiveles(1)
@@ -64,62 +64,14 @@ case class Grupo(val _heroes : List[EstadoHeroe], val _cofre : Cofre, val habita
   def contieneItem(unItem: Item): Boolean = _cofre.contieneItem(unItem)
 
   /*override def map[R <: T](funcion: T => R): Grupo[R] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)));*/
-  def transformarHeroes(funcion: EstadoHeroe => EstadoHeroe ): Grupo = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
+  def transformarHeroes(funcion: Heroe => Heroe ): Grupo = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
 
   def aumentarNiveles(niveles: Int): Grupo = {
     this.copy(_heroes = _heroes.map(h => h.subirNivel(niveles)))
   }
 }
 
-
-abstract class EstadoHeroe(val heroe : Heroe){
-  def estoyVivo() : Boolean;
-  def perderVida(vidaAPerder : Int) : EstadoHeroe;
-  def matarCondicion(condicion: EstadoHeroe): EstadoHeroe;
-  def getVelocidad() : Int = heroe.atributos.velocidadBase;
-  def getFuerza() : Int = heroe.getFuerza;
-  def esLadron() = heroe.esLadron();
-  def subirNivel(niveles : Int) : EstadoHeroe;
-}
-
-case class Vivo(val _heroe : Heroe) extends EstadoHeroe(_heroe) {
-  def estoyVivo() : Boolean = true;
-  override def perderVida(vidaAPerder : Int) : EstadoHeroe = {
-    if (_heroe.vidaResultante(vidaAPerder) > 0){
-      this.copy(_heroe = _heroe.bajarVida(vidaAPerder));
-    } else {
-      this.morir();
-    }
-  }
-
-  def morir() : EstadoHeroe = {
-    val nuevoHeroe : Heroe = _heroe.copy(saludActual = 0);
-    Muerto(_heroe = nuevoHeroe);
-  }
-
-  def matarCondicion(condicion: EstadoHeroe): EstadoHeroe ={
-    if (this == condicion) {
-      this.morir()
-    }else
-      this.copy()
-  }
-
-  def subirNivel(niveles : Int) :EstadoHeroe = this.copy(_heroe.subirNivel(niveles)); // o bien _heroe = ***
-}
-
-case class Muerto(val _heroe : Heroe) extends EstadoHeroe (_heroe){
-  def estoyVivo() : Boolean = false;
-
-  override def perderVida(vidaAPerder: Int): EstadoHeroe = ???
-  def matarCondicion(condicion: EstadoHeroe) : EstadoHeroe = ???
-  def subirNivel(niveles : Int) :EstadoHeroe = ???
-  override def getVelocidad() : Int = ???
-  override def esLadron(): Boolean = ???
-  override def getFuerza(): Int = ???
-}
-
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int ,val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
-  //TODO: Agregar estrategia de planificacion de recorrido por si es el lider
   def getFuerza() : Int = {
     val adicional : Int =
     trabajo match {
@@ -145,6 +97,30 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
     case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
     case Vidente => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo).puntaje()).lastOption)
   }
+
+  def estoyVivo() : Boolean = {
+    !(saludActual == 0);
+  }
+ // def matarCondicion(condicion: Heroe): Heroe;
+  def getVelocidad() : Int = atributos.velocidadBase;
+
+
+  def perderVida(vidaAPerder : Int) : Heroe = {
+    if (vidaResultante(vidaAPerder) > 0){
+      bajarVida(vidaAPerder);
+    } else {
+      bajarVida(saludActual)
+    }
+  }
+
+  /*  def matarCondicion(condicion: EstadoHeroe): EstadoHeroe ={
+      if (this == condicion) {
+        this.morir()
+      }else
+        this.copy()
+    }*/
+
+
 
   // DONDE PONGO ESTO??
 /*  def esCompatible(grupo: GrupoVivo) : Boolean = {
@@ -197,7 +173,7 @@ case object Introvertido extends Compatibilidad {
   override val criterio: Personalidad = _._heroes.length <= 3
 }
 case object Bigotes extends Compatibilidad{
-  override val criterio: Personalidad = ! _._heroes.exists(h => h.heroe.trabajo match {
+  override val criterio: Personalidad = ! _._heroes.exists(h => h.trabajo match {
     case Ladrón(a) => true
     case _ => false
   })

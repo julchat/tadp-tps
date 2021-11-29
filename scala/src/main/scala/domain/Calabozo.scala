@@ -70,8 +70,8 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
 case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
   type Condicion = (Grupo => Boolean)
   val condicionBase: Condicion = grupo => {
-    grupo._heroes.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case Ladrón(habilidadBase) => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 20
+    grupo._heroes.exists(heroe => heroe.trabajo match {
+      case Ladrón(habilidadBase) => (habilidadBase + (heroe.nivel * 3)) >= 20
       case _ => false
     })
   }
@@ -103,8 +103,8 @@ trait Dificultad {
 case object Cerrada extends Dificultad {
   override def condicionesParaAbrir(grupo: Grupo) : List[Condicion] = {
     val condicion1 : Condicion = grupo => grupo._cofre.items.contains(Llave)
-    val condicion2 : Condicion = grupo => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case Ladrón(habilidadBase)  => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 10 || grupo._cofre.items.contains(Ganzúas)
+    val condicion2 : Condicion = grupo => grupo.exists(heroe => heroe.trabajo match {
+      case Ladrón(habilidadBase)  => (habilidadBase + (heroe.nivel * 3)) >= 10 || grupo._cofre.items.contains(Ganzúas)
       case _ => false
     })
     List(condicion1,condicion2)
@@ -113,12 +113,12 @@ case object Cerrada extends Dificultad {
 
 case object Escondida extends Dificultad{
   override def condicionesParaAbrir(grupo: Grupo) : List[Condicion] = {
-    val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case Ladrón(habilidadBase)  => (habilidadBase + (estadoHeroe.heroe.nivel * 3)) >= 6
+    val condicion1 : Condicion = (grupo) => grupo.exists(heroe => heroe.trabajo match {
+      case Ladrón(habilidadBase)  => (habilidadBase + (heroe.nivel * 3)) >= 6
       case _ => false
     })
-    val condicion2 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case m : Mago => m.conoceElHechizo(Vislumbrar,estadoHeroe.heroe.nivel);
+    val condicion2 : Condicion = (grupo) => grupo.exists(heroe => heroe.trabajo match {
+      case m : Mago => m.conoceElHechizo(Vislumbrar,heroe.nivel);
       case _ => false
     })
     List(condicion1,condicion2)
@@ -127,8 +127,8 @@ case object Escondida extends Dificultad{
 
 case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
   override def condicionesParaAbrir(grupo: Grupo) : List[Condicion] = {
-    val condicion1 : Condicion = (grupo) => grupo.exists(estadoHeroe => estadoHeroe.heroe.trabajo match {
-      case m : Mago  => m.conoceElHechizo(hechizoUtilizado,estadoHeroe.heroe.nivel);
+    val condicion1 : Condicion = (grupo) => grupo.exists(heroe => heroe.trabajo match {
+      case m : Mago  => m.conoceElHechizo(hechizoUtilizado,heroe.nivel);
       case _ => false
     })
     List(condicion1)
@@ -144,12 +144,11 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
       case NoPasaNada => grupo;
       case TesoroPerdido(item) => grupo.agregarABotin(item);
       case MuchosMuchosDardos => grupo.transformarHeroes(unEstadoHeroe => unEstadoHeroe.perderVida(10));
-      case TrampaDeLeones => grupo.transformarHeroes( h => h.matarCondicion(grupo.masLento()));
-      // case Encuentro(personalidad) => grupo //Map con aplicacion parcial para ver como se lleva con el lider?
-      case Encuentro(heroeExtranjero : Vivo) => {
+      //case TrampaDeLeones => grupo.transformarHeroes( h => h.matarCondicion(grupo.masLento()));
+      case Encuentro(heroeExtranjero : Heroe) => {
         type Personalidad = (Grupo => Boolean)
-        val personalidadEncuentro : Personalidad = heroeExtranjero.heroe.compatibilidad.criterio;
-        val personalidadLider : Personalidad = grupo.getLider().get.heroe.compatibilidad.criterio;
+        val personalidadEncuentro : Personalidad = heroeExtranjero.compatibilidad.criterio;
+        val personalidadLider : Personalidad = grupo.getLider().get.compatibilidad.criterio;
         if(personalidadEncuentro.apply(grupo) && personalidadLider.apply(grupo.agregarHeroe(heroeExtranjero))){
           grupo.agregarHeroe(heroeExtranjero)
         } else {
@@ -178,4 +177,4 @@ case object NoPasaNada extends Situacion
 case class TesoroPerdido(item: Item) extends Situacion
 case object MuchosMuchosDardos extends  Situacion
 case object TrampaDeLeones extends Situacion
-case class Encuentro(heroe: Vivo) extends Situacion
+case class Encuentro(heroe: Heroe) extends Situacion
