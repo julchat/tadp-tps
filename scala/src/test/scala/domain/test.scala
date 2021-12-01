@@ -5,49 +5,44 @@ import org.scalatest.freespec.AnyFreeSpec
 
 class test extends AnyFreeSpec {
 
- /* "Trabajos" - {
+  "Trabajos" - {
     "un heroe con 100 de fuerza base y nivel 1 siendo guerrero debe tener 120 de fuerza" in {
 
       val atributo = Atributos(100, 50)
-      val unGuerrero = Heroe(atributo, 1, 100, Guerrero, Introvertido, Heroico)
+      val unGuerrero = Heroe(atributo, 1, 100, Guerrero, Introvertido, Heroico())
       assert(unGuerrero.getFuerza() == 120)
     }
     "un ladron con habilidad base 30 y nivel 2 debe tener habilidad final 36" in {
 
-      val atributos = Atributos(100, 50)
-      val heroe = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
-
-      // [TODO] no seria mejor que hereden de Guerrero, embes de hacer esto? del pater
-      assert(heroe.habilidadEnSusManos == 36)
+      val heroe = Ladrón(30)
+      assert(heroe.habilidadEnSusManos(2)   == 36)
     }
     "un mago cuando tiene el nivel para aprender un hechizo, adquiera dicho hechizo" in {
 
-      var atributos = Atributos(100, 50)
-      var hechizos = List(HechizoAprendible(2, Vislumbrar))
-      var heroe = Heroe(atributos, 1, 100, Mago(hechizos), Introvertido, Heroico)
-
-      // [TODO] ACA igual tipo tendria que hacer lo mismo que en la anterior
-      //assert(heroe.trabajo.conoceElHechizo)
+      var hechizos = List(HechizoAprendible(2, Vislumbrar), HechizoAprendible(10, AprobarElTP) )
+      var heroe = Mago(hechizos)
+      assert(heroe.conoceElHechizo(Vislumbrar,2))
     }
-  }*/
+  }
 
   "Grupos" - {
     "si la salud de un aventurero baja a cero, es eliminado del grupo" in {
-     /* var atributos = Atributos(100, 50, 80)
+      var atributos = Atributos(100, 50)
       var hechizos = List(HechizoAprendible(2, Vislumbrar))
-      val ladron = Vivo(Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico))
-      val guerrerouno = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
-      val guerrerodos = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
-      val mago = Vivo(Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico))
+      val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico())
+      val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
+      val guerrerodos = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
+      val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico())
 
-      var heroes=List[EstadoHeroe](guerrerouno,ladron,guerrerodos,mago)
+      var heroes=List[Heroe](guerrerouno,ladron,guerrerodos,mago)
 
       var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
       //var grupo=GrupoVivo(heroes,cofre,Habitacion((NoPasaNada,TrampaDeLeones),Puerta((NoPasaNada,TesoroPerdido),(Cerrada,Escondida))))
-      var grupo=GrupoVivo(heroes,cofre,Habitacion(NoPasaNada,List.empty),List.empty)
+      var grupo = Grupo( heroes,cofre,List.empty)
+      val resGrupo = Habitacion(NoPasaNada,List.empty).recorrerHabitacion(grupo)
+      assert(resGrupo.cantidadDeVivos()==4)
+      
 
-      assert(grupo.cantidadDeVivos()==4)
-      */
     }
 
     "si una de las habitaciones tiene trampa de leones, muere el mas lento" in {

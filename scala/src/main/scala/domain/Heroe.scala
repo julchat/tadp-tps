@@ -32,7 +32,7 @@ trait Trabajo
 
 case object Guerrero extends Trabajo
 case class Ladrón(val habilidadBase : Int) extends Trabajo{
-  def habilidadEnSusManos(nivelLadron : Int):Int = habilidadBase + 3 * nivelLadron
+  def habilidadEnSusManos(nivelLadron : Int):Int = habilidadBase + 3 * nivelLadron  // nunca se usa
 }
 case class Mago(val hechizosAprendibles : List[HechizoAprendible]) extends Trabajo{
   def conoceElHechizo(hechizo : Hechizo, nivelMago : Int) : Boolean = {
@@ -48,6 +48,7 @@ case class HechizoAprendible(val nivelRequerido : Int, val hechizo : Hechizo){
 
 trait Hechizo
 case object Vislumbrar extends Hechizo
+case object AprobarElTP extends Hechizo
 
 abstract class CriterioEleccion(val criterio : Grupo => Option[Puerta])
 case class Heroico(_criterio : Grupo => Option[Puerta] = _.filtrarPuertasAbribles.lastOption) extends CriterioEleccion(_criterio)
