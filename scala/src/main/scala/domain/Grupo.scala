@@ -2,6 +2,10 @@ package domain;
 
 case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) {
 
+  def agregarHabitacion(habitacionRecorrida: Habitacion): Grupo = {
+    this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
+  }
+
   def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + tamañoBotin() + nivelMasAlto()
   def tamañoBotin(): Int = _cofre.items.length
   def nivelMasAlto(): Int = _heroes.map(heroe => heroe.nivel).max
@@ -20,10 +24,13 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
   }
 
   def getLider(): Option[Heroe] = _heroes.find(_.estoyVivo())
-  def recorristeHabitacion(habitacionRecorrida : Habitacion) : Grupo = {
-    val grupoNuevo: Grupo = this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
-    println("Se agrego una habitacion recorrida " + grupoNuevo.habitaciones);
-    grupoNuevo
+  def estadoDelGrupo(calabozo: Calabozo) : EstadoRecorrido = {
+    if(this._heroes.exists(heroe => heroe.estoyVivo())){
+      RecorridoExitoso(calabozo)
+    }
+    else{
+      RecorridoFallido(calabozo);
+    }
   }
   //Aca hay que devolver un Vivo
   def masLento(): Heroe = {
@@ -107,4 +114,26 @@ trait Criterio
 case object Heroico extends Criterio
 case object Ordenado extends Criterio
 case object Vidente extends Criterio
+
+abstract class EstadoRecorrido(val calabozo: Calabozo){
+  def elegirPuertaYRecorrer(grupo : Grupo): EstadoRecorrido = {
+    grupo.getLider().get.elegirPuerta(grupo) match {
+      case puerta: Puerta => puerta.get.habitacion.recorrerHabitacion(grupo).estadoDelGrupo(calabozo)
+      case None => RecorridoFallido(calabozo)
+    };
+  }
+  def recorrerTodoElCalabozo(grupo: Grupo): EstadoRecorrido = ???
+}
+
+case class RecorridoExitoso(val _calabozo: Calabozo) extends EstadoRecorrido(_calabozo){
+  override def recorrerTodoElCalabozo(grupo: Grupo): EstadoRecorrido = {
+    elegirPuertaYRecorrer(grupo).recorrerTodoElCalabozo(grupo)
+  }
+}
+case class RecorridoFallido(val _calabozo: Calabozo) extends EstadoRecorrido(_calabozo){
+  override def recorrerTodoElCalabozo(grupo: Grupo): EstadoRecorrido = {
+    print("no hay puerta")
+    this
+  }
+}
 

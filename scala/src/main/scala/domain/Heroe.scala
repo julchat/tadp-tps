@@ -21,10 +21,10 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }
   //atributo de la funcion para criterioEleccion a la cual le apliquemos el grupo
   //refactor para abstraer lo que esta en comun
-  def elegirPuerta(grupo: Grupo):Grupo = criterioEleccion match {
-    case Heroico => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.lastOption)
-    case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
-    case Vidente => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo).puntaje()).lastOption)
+  def elegirPuerta(grupo: Grupo): Option[Puerta] = criterioEleccion match {
+    case Heroico =>  grupo.filtrarPuertasAbribles.lastOption
+    case Ordenado =>  grupo.filtrarPuertasAbribles.headOption
+    case Vidente =>  grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo) ).lastOption
   }
 
   def estoyVivo() : Boolean = {

@@ -5,9 +5,9 @@ import scala.util.Try
 case class GrupoMurioException(grupo: Grupo) extends Exception("Se murio el grupo")
 case class GrupoPerdidoException(grupo: Grupo) extends Exception ("No hay mas puertas para abrir")
 case class RecorridoExitoso(nivel: Int) extends Exception ("Recorrido exitoso con nivel: " + nivel)
-trait Condicion extends (Grupo => Boolean)
-
 case class SeEncontroLaSalidaException() extends RuntimeException
+
+trait Condicion extends (Grupo => Boolean)
 
 class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
 //grupo : estadorrecorrido
@@ -157,7 +157,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
       }
      //case Encuentro(heroExtranjero : Vivo) => if(grupo.getLider().get.esCompatible(grupo.agregarHeroe(heroExtranjero)) && heroExtranjero.heroe.esCompatible(grupo)) La otra opcion era hacer el pattern matching en esCompatible
     }
-    grupoListo.recorristeHabitacion(this);
+    grupoListo.agregarHabitacion(this);
   }
 
 /*  def seguirRecorrido(grupo: GrupoVivo): Grupo = {
