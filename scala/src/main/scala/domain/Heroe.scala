@@ -1,6 +1,7 @@
 package domain
 
-case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int ,val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
+case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int ,
+                 val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
   def getFuerza() : Int = {
     val adicional : Int =
       trabajo match {
@@ -14,6 +15,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   def subirNivel(nivelesGanados: Int) : Heroe = this.copy(nivel = nivel + nivelesGanados)
 
   def esLadron() : Boolean ={
+    // [TODO] En todas las veces que usas Pater Machin para el "trabajo" solo lo usas para 1 comparacion
     trabajo match {
       case Ladrón(habilidadBase) => true
       case _ => false
@@ -21,6 +23,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   }
   //atributo de la funcion para criterioEleccion a la cual le apliquemos el grupo
   //refactor para abstraer lo que esta en comun
+  // este aunque sea tiene 3 case un poco distintos
   def elegirPuerta(grupo: Grupo):Grupo = criterioEleccion match {
     case Heroico => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.lastOption)
     case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
@@ -39,6 +42,12 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
       bajarVida(vidaAPerder);
     } else {
       bajarVida(saludActual)
+    }
+  }
+  def habilidaEnSusManos():Int ={
+    trabajo match {
+      case Ladrón(habilidadBase) => habilidadBase + 3 * nivel
+      case _ => 0
     }
   }
 

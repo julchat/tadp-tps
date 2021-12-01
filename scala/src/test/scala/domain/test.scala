@@ -17,7 +17,8 @@ class test extends AnyFreeSpec {
       val atributos = Atributos(100, 50)
       val heroe = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
 
-      //assert(heroe.trabajo.habilidadBase == 36)
+      // [TODO] no seria mejor que hereden de Guerrero, embes de hacer esto? del pater
+      assert(heroe.habilidaEnSusManos == 36)
     }
     "un mago cuando tiene el nivel para aprender un hechizo, adquiera dicho hechizo" in {
 
@@ -25,6 +26,7 @@ class test extends AnyFreeSpec {
       var hechizos = List(HechizoAprendible(2, Vislumbrar))
       var heroe = Heroe(atributos, 1, 100, Mago(hechizos), Introvertido, Heroico)
 
+      // [TODO] ACA igual tipo tendria que hacer lo mismo que en la anterior
       //assert(heroe.trabajo.conoceElHechizo)
     }
   }
