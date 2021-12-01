@@ -1,9 +1,9 @@
 package domain;
 
-case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List()) {
+case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitacionesRecorridas: List[Habitacion] = List()) {
 
   def agregarHabitacion(habitacionRecorrida: Habitacion): Grupo = {
-    this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
+    this.copy(habitacionesRecorridas = habitacionesRecorridas.appended(habitacionRecorrida))
   }
 
   def puntaje(): Int = cantidadDeVivos() * 10 - cantidadDeMuertos() * 5 + tamañoBotin() + nivelMasAlto()
@@ -18,15 +18,15 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
     _heroes.count { unHeroe => !unHeroe.estoyVivo() };
   }
 
-  def filtrarPuertasAbribles : List[Puerta] = habitaciones.flatMap(h => h.puertas.filter(p => p.puedoSerAbierta(this)))
+  def filtrarPuertasAbribles : List[Puerta] = habitacionesRecorridas.flatMap(h => h.puertas.filter(p => p.puedoSerAbierta(this)))
   def cantidadDeVivos(): Int = {
     _heroes.length - cantidadDeMuertos();
   }
 
   def getLider(): Option[Heroe] = _heroes.find(_.estoyVivo())
-  def estadoDelGrupo(calabozo: Calabozo) : EstadoRecorrido = {
+  def estadoDelGrupo() : EstadoRecorrido = {
     if(this._heroes.exists(heroe => heroe.estoyVivo())){
-      RecorridoExitoso(this)
+      RecorridoEnProceso(this)
     }
     else{
       RecorridoFallidoPorMuerte(this);
@@ -60,7 +60,6 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
 
   def contieneItem(unItem: Item): Boolean = _cofre.contieneItem(unItem)
 
-  /*override def map[R <: T](funcion: T => R): Grupo[R] = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)));*/
   def transformarHeroes(funcion: Heroe => Heroe ): Grupo = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
 
   def aumentarNiveles(niveles: Int): Grupo = {

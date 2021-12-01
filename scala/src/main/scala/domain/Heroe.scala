@@ -14,10 +14,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   def bajarVida (vidaPerdida : Int ) : Heroe = this.copy(saludActual = saludActual - vidaPerdida);
   def subirNivel(nivelesGanados: Int) : Heroe = this.copy(nivel = nivel + nivelesGanados)
 
-  //atributo de la funcion para criterioEleccion a la cual le apliquemos el grupo
-  //refactor para abstraer lo que esta en comun
   def elegirPuerta(grupo : Grupo): Option[Puerta] = criterioEleccion.criterio.apply(grupo)
-  // este aunque sea tiene 3 case un poco distintos
   def estoyVivo() : Boolean = saludActual > 0
   def getVelocidad() : Int = atributos.velocidadBase;
   def perderVida(vidaAPerder : Int) : Heroe = {

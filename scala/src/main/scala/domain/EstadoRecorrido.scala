@@ -1,27 +1,23 @@
 package domain
 abstract class EstadoRecorrido(val grupo : Grupo){
-  def elegirPuertaYRecorrer(calabozo : Calabozo): EstadoRecorrido = {
-    grupo.getLider().get.elegirPuerta(grupo) match {
-      case Some(puerta) => puerta.habitacion.recorrerHabitacion(grupo).estadoDelGrupo(calabozo)
+  def recorrerHastaFallarOEncontrarSalida(puertaSalida: Puerta): EstadoRecorrido = {
+    this.map(g => g.getLider().get.elegirPuerta(grupo) match {
+      case Some(puerta) if puerta != puertaSalida => puerta.habitacion.recorrerHabitacion(g).estadoDelGrupo().recorrerHastaFallarOEncontrarSalida(puertaSalida)
+      case Some(_) => RecorridoExitoso(grupo)
       case None => RecorridoFallidoPorPerdición(grupo)
-    };
+    })
   }
-  def recorrerTodoElCalabozo(calabozo: Calabozo): EstadoRecorrido
+
+  def map(funcion : Grupo => EstadoRecorrido) : EstadoRecorrido
 }
 
-case class RecorridoExitoso(val _grupo: Grupo) extends EstadoRecorrido(_grupo){
-  def recorrerTodoElCalabozo(calabozo:Calabozo): EstadoRecorrido = {
-    elegirPuertaYRecorrer(calabozo).recorrerTodoElCalabozo(calabozo)
-  }
-}
-case class RecorridoFallidoPorPerdición(val _grupo : Grupo) extends EstadoRecorrido(_grupo){
-  def recorrerTodoElCalabozo(calabozo : Calabozo): EstadoRecorrido = {
-    this
-  }
+case class RecorridoEnProceso(val _grupo : Grupo) extends EstadoRecorrido(_grupo){
+  def map(funcion: Grupo => EstadoRecorrido): EstadoRecorrido = funcion.apply(grupo)
 }
 
-case class RecorridoFallidoPorMuerte(val _grupo : Grupo) extends EstadoRecorrido(_grupo){
-  def recorrerTodoElCalabozo(calabozo:Calabozo) : EstadoRecorrido = {
-    this
+abstract class RecorridoFinalizado(val _grupo : Grupo) extends EstadoRecorrido(_grupo){
+  def map(funcion: Grupo => EstadoRecorrido) : EstadoRecorrido = this
   }
-}
+case class RecorridoExitoso(val __grupo: Grupo) extends RecorridoFinalizado(__grupo)
+case class RecorridoFallidoPorPerdición(val __grupo : Grupo) extends RecorridoFinalizado(__grupo)
+case class RecorridoFallidoPorMuerte(val __grupo : Grupo) extends RecorridoFinalizado(__grupo)

@@ -5,7 +5,7 @@ import org.scalatest.freespec.AnyFreeSpec
 
 class test extends AnyFreeSpec {
 
-  "Trabajos" - {
+ /* "Trabajos" - {
     "un heroe con 100 de fuerza base y nivel 1 siendo guerrero debe tener 120 de fuerza" in {
 
       val atributo = Atributos(100, 50)
@@ -29,7 +29,7 @@ class test extends AnyFreeSpec {
       // [TODO] ACA igual tipo tendria que hacer lo mismo que en la anterior
       //assert(heroe.trabajo.conoceElHechizo)
     }
-  }
+  }*/
 
   "Grupos" - {
     "si la salud de un aventurero baja a cero, es eliminado del grupo" in {
@@ -116,51 +116,63 @@ class test extends AnyFreeSpec {
     var atributos = Atributos(100, 50)
     var atributosMasLento = Atributos(100, 5)
     var hechizos = List(HechizoAprendible(2, Vislumbrar))
-    val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
-    val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico)
-    val guerrerodos = Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico)
-    val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico)
+    val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico())
+    val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
+    val guerrerodos = Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico())
+    val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico())
 
     val heroicos: List[Heroe] = List(ladron,guerrerouno,guerrerodos,mago);
     var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
+    val grupoFantastico: Grupo = new Grupo(heroicos,cofre,List()) ;
 
-    val grupoFantastico: Grupo = new Grupo(heroicos,cofre,List(),null) ;
-
-    //val grupoDespDelRecorrido: Grupo = calabozoTenebroso.recorrerTodoElCalabozo(grupoFantastico);
-
-    //print(grupoDespDelRecorrido.puntaje() + " -> " + grupoDespDelRecorrido.cantidadDeVivos() + " -> " + grupoDespDelRecorrido.cantidadDeMuertos());
+   print(calabozoTenebroso.recorrerCalabozo(grupoFantastico))
 
   }
 
-  "Calabozo con grupo muerto" in {
+  "Calabozo con grupo muerto" - {
 
     val puertaSalida: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada));
     val atributosExtranjero = Atributos(300,50)
-    val asesino = Heroe(atributosExtranjero,2,100,Guerrero,Loquitos,Vidente)
+    val asesino = Heroe(atributosExtranjero,2,100,Guerrero,Loquitos,Vidente())
     val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(Encuentro(asesino), List(puertaSalida)),List(Cerrada));
     val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
-    var atributos = Atributos(5, 50)
-    var atributosMasLento = Atributos(5, 5)
-    var hechizos = List(HechizoAprendible(2, Vislumbrar))
-    val ladron = Heroe(atributos, 2, 5, Ladrón(30), Loquitos, Heroico)
-    val guerrerouno = Heroe(atributos, 2, 5, Guerrero, Loquitos, Heroico)
-    val guerrerodos = Heroe(atributosMasLento, 2, 5, Guerrero, Loquitos, Heroico)
-    val mago = Heroe(atributos, 2, 5, Mago(hechizos), Loquitos, Heroico)
-
-
+    val atributos = Atributos(5, 50)
+    val atributosMasLento = Atributos(5, 5)
+    val hechizos = List(HechizoAprendible(2, Vislumbrar))
+    val ladron = Heroe(atributos, 2, 5, Ladrón(30), Loquitos, Heroico())
+    val guerrerouno = Heroe(atributos, 2, 5, Guerrero, Loquitos, Heroico())
+    val guerrerodos = Heroe(atributosMasLento, 2, 5, Guerrero, Loquitos, Heroico())
+    val mago = Heroe(atributos, 2, 5, Mago(hechizos), Loquitos, Heroico())
 
     val heroicos: List[Heroe] = List(ladron,guerrerouno,guerrerodos,mago);
     var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
 
-   /* val grupoFantastico: GrupoVivo = new GrupoVivo(heroicos,cofre,List(),null) ;
+    val grupoFantastico: Grupo = new Grupo(heroicos,cofre,List()) ;
 
-    val grupoDespDelRecorrido: Grupo = calabozoTenebroso.recorrerTodoElCalabozo(grupoFantastico);
+    print(calabozoTenebroso.recorrerCalabozo(grupoFantastico))
 
-   print(grupoDespDelRecorrido.puntaje() + " -> " + grupoDespDelRecorrido.cantidadDeVivos() + " -> " + grupoDespDelRecorrido.cantidadDeMuertos());
-    assert(grupoDespDelRecorrido match {
-      case gm : GrupoMuerto => true
-      case _ => false
-    })*/
+    }
+
+  "Calabozo con grupo exitoso" - {
+
+    val puertaSalida: Puerta = Puerta(Habitacion/*B*/(NoPasaNada, List()),List(Cerrada));
+    val puertaPrincipal: Puerta = Puerta(Habitacion/*A*/(NoPasaNada, List(puertaSalida)),List(Cerrada));
+
+    val calabozoTenebroso: Calabozo = new Calabozo(puertaPrincipal,puertaSalida);
+
+    var atributos = Atributos(100, 50)
+    var atributosMasLento = Atributos(100, 5)
+    var hechizos = List(HechizoAprendible(2, Vislumbrar))
+    val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico())
+    val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
+    val guerrerodos = Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico())
+    val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico())
+
+    val heroicos: List[Heroe] = List(ladron,guerrerouno,guerrerodos,mago);
+    var cofre=Cofre(List(Llave),List("chuchillo","pistola"),45)
+    val grupoFantastico: Grupo = new Grupo(heroicos,cofre,List()) ;
+
+    print(calabozoTenebroso.recorrerCalabozo(grupoFantastico))
+
   }
-
 }
