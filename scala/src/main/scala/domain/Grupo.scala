@@ -1,6 +1,6 @@
 package domain;
 
-case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List(), val puertaElegida : Option[Puerta]) {
+case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones: List[Habitacion] = List()) {
 
   def agregarHabitacion(habitacionRecorrida: Habitacion): Grupo = {
     this.copy(habitaciones = habitaciones.appended(habitacionRecorrida))
@@ -26,29 +26,16 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
   def getLider(): Option[Heroe] = _heroes.find(_.estoyVivo())
   def estadoDelGrupo(calabozo: Calabozo) : EstadoRecorrido = {
     if(this._heroes.exists(heroe => heroe.estoyVivo())){
-      RecorridoExitoso(calabozo)
+      RecorridoExitoso(this)
     }
     else{
-      RecorridoFallido(calabozo);
+      RecorridoFallidoPorMuerte(this);
     }
   }
   //Aca hay que devolver un Vivo
   def masLento(): Heroe = {
     _heroes.sortBy(uh => uh.getVelocidad()).head
-    /*var menor = getLider().get
-    heroes.foreach(h => if (h.getVelocidad() < menor.getVelocidad()) {
-      menor = h
-    })
-    menor*/
   }
-  def conMasNivel(): Heroe = {
-    var mayor = getLider().get
-    _heroes.foreach(h => if (h.nivel > mayor.nivel) {
-      mayor = h
-    })
-    mayor
-  }
-
   // TODO : Se usa para enfrentar al heroe si no es compatible
   def fuerzaTotal(): Int = {
     _heroes.foldRight[Int](0)(_.getFuerza()+_)
@@ -66,7 +53,10 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
     }
   }
 
-  def hayLadrones(): Boolean = _heroes.exists(h => h.esLadron())
+  def hayLadrones(): Boolean = _heroes.exists(h => h.trabajo match {
+    case l : Ladrón => true
+    case _ => false
+  })
 
   def contieneItem(unItem: Item): Boolean = _cofre.contieneItem(unItem)
 
@@ -89,51 +79,4 @@ case class Cofre(val items : List[Item], val armas : List[String], val tesoroAcu
 trait Item
 case object Ganzúas extends Item
 case object Llave extends Item
-
-trait Compatibilidad {
-  type Personalidad = Grupo => Boolean
-  val criterio: Personalidad
-}
-case object Introvertido extends Compatibilidad {
-  override val criterio: Personalidad = _._heroes.length <= 3
-}
-case object Bigotes extends Compatibilidad{
-  override val criterio: Personalidad = ! _._heroes.exists(h => h.trabajo match {
-    case Ladrón(a) => true
-    case _ => false
-  })
-}
-case class Interesados(objParticular: Item) extends Compatibilidad{
-  override val criterio: Personalidad = _._cofre.contieneItem(objParticular)
-}
-case object Loquitos extends Compatibilidad{
-  override val criterio: Personalidad = _ => false
-}
-
-trait Criterio
-case object Heroico extends Criterio
-case object Ordenado extends Criterio
-case object Vidente extends Criterio
-
-abstract class EstadoRecorrido(val calabozo: Calabozo){
-  def elegirPuertaYRecorrer(grupo : Grupo): EstadoRecorrido = {
-    grupo.getLider().get.elegirPuerta(grupo) match {
-      case puerta: Puerta => puerta.get.habitacion.recorrerHabitacion(grupo).estadoDelGrupo(calabozo)
-      case None => RecorridoFallido(calabozo)
-    };
-  }
-  def recorrerTodoElCalabozo(grupo: Grupo): EstadoRecorrido = ???
-}
-
-case class RecorridoExitoso(val _calabozo: Calabozo) extends EstadoRecorrido(_calabozo){
-  override def recorrerTodoElCalabozo(grupo: Grupo): EstadoRecorrido = {
-    elegirPuertaYRecorrer(grupo).recorrerTodoElCalabozo(grupo)
-  }
-}
-case class RecorridoFallido(val _calabozo: Calabozo) extends EstadoRecorrido(_calabozo){
-  override def recorrerTodoElCalabozo(grupo: Grupo): EstadoRecorrido = {
-    print("no hay puerta")
-    this
-  }
-}
 

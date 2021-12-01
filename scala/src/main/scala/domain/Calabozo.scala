@@ -4,7 +4,7 @@ import scala.collection.immutable.Range
 import scala.util.Try
 case class GrupoMurioException(grupo: Grupo) extends Exception("Se murio el grupo")
 case class GrupoPerdidoException(grupo: Grupo) extends Exception ("No hay mas puertas para abrir")
-case class RecorridoExitoso(nivel: Int) extends Exception ("Recorrido exitoso con nivel: " + nivel)
+/*case class RecorridoExitoso(nivel: Int) extends Exception ("Recorrido exitoso con nivel: " + nivel)*/
 case class SeEncontroLaSalidaException() extends RuntimeException
 
 trait Condicion extends (Grupo => Boolean)
@@ -139,8 +139,9 @@ case class Encantada(hechizoUtilizado: Hechizo) extends Dificultad(){
 case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
 
   def recorrerHabitacion(grupo: Grupo): Grupo = {
+    situacion.enfrentaAGrupo(grupo).agregarHabitacion(this)
     //Con polimorfismo queda un poco mas claro y no tengo que modificar este codigo
-    val grupoListo : Grupo = situacion match{
+/*    val grupoListo : Grupo = situacion match{
       case NoPasaNada => grupo;
       case TesoroPerdido(item) => grupo.agregarABotin(item);
       case MuchosMuchosDardos => grupo.transformarHeroes(unEstadoHeroe => unEstadoHeroe.perderVida(10));
@@ -156,8 +157,7 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
         }
       }
      //case Encuentro(heroExtranjero : Vivo) => if(grupo.getLider().get.esCompatible(grupo.agregarHeroe(heroExtranjero)) && heroExtranjero.heroe.esCompatible(grupo)) La otra opcion era hacer el pattern matching en esCompatible
-    }
-    grupoListo.agregarHabitacion(this);
+    }*/
   }
 
 /*  def seguirRecorrido(grupo: GrupoVivo): Grupo = {
@@ -172,9 +172,30 @@ case class Habitacion(situacion: Situacion, puertas: List[Puerta]){
     }*/
 }
 
-trait Situacion
-case object NoPasaNada extends Situacion
-case class TesoroPerdido(item: Item) extends Situacion
-case object MuchosMuchosDardos extends  Situacion
-case object TrampaDeLeones extends Situacion
-case class Encuentro(heroe: Heroe) extends Situacion
+trait Situacion{
+  def enfrentaAGrupo(grupo: Grupo) : Grupo
+}
+case object NoPasaNada extends Situacion {
+  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo
+}
+case class TesoroPerdido(item: Item) extends Situacion {
+  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.agregarABotin(item)
+}
+case object MuchosMuchosDardos extends  Situacion {
+  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroes(h => h.perderVida(10))
+}
+case object TrampaDeLeones extends Situacion {
+  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroes(h => if (h == grupo.masLento()){h.bajarVida(h.saludActual)} else h)
+}
+case class Encuentro(heroe: Heroe) extends Situacion {
+  def enfrentaAGrupo(grupo : Grupo) = {
+    type Personalidad = (Grupo => Boolean)
+    val personalidadEncuentro: Personalidad = heroe.compatibilidad.criterio;
+    val personalidadLider: Personalidad = grupo.getLider().get.compatibilidad.criterio;
+    if (personalidadEncuentro.apply(grupo) && personalidadLider.apply(grupo.agregarHeroe(heroe))) {
+      grupo.agregarHeroe(heroe)
+    } else {
+      grupo.pelear(heroe)
+    }
+  }
+}

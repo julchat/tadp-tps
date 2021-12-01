@@ -18,7 +18,7 @@ class test extends AnyFreeSpec {
       val heroe = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico)
 
       // [TODO] no seria mejor que hereden de Guerrero, embes de hacer esto? del pater
-      assert(heroe.habilidaEnSusManos == 36)
+      assert(heroe.habilidadEnSusManos == 36)
     }
     "un mago cuando tiene el nivel para aprender un hechizo, adquiera dicho hechizo" in {
 

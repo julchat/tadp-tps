@@ -1,7 +1,7 @@
 package domain
 
 case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : Int ,
-                 val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : Criterio){
+                 val trabajo : Trabajo,val compatibilidad : Compatibilidad, val criterioEleccion : CriterioEleccion){
   def getFuerza() : Int = {
     val adicional : Int =
       trabajo match {
@@ -14,36 +14,12 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
   def bajarVida (vidaPerdida : Int ) : Heroe = this.copy(saludActual = saludActual - vidaPerdida);
   def subirNivel(nivelesGanados: Int) : Heroe = this.copy(nivel = nivel + nivelesGanados)
 
-  def esLadron() : Boolean ={
-    // [TODO] En todas las veces que usas Pater Machin para el "trabajo" solo lo usas para 1 comparacion
-    trabajo match {
-      case Ladrón(habilidadBase) => true
-      case _ => false
-    }
-  }
   //atributo de la funcion para criterioEleccion a la cual le apliquemos el grupo
   //refactor para abstraer lo que esta en comun
-  def elegirPuerta(grupo: Grupo): Option[Puerta] = criterioEleccion match {
-    case Heroico =>  grupo.filtrarPuertasAbribles.lastOption
-    case Ordenado =>  grupo.filtrarPuertasAbribles.headOption
-    case Vidente =>  grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo) ).lastOption
-  }
-/*=======
+  def elegirPuerta(grupo : Grupo): Option[Puerta] = criterioEleccion.criterio.apply(grupo)
   // este aunque sea tiene 3 case un poco distintos
-  def elegirPuerta(grupo: Grupo):Grupo = criterioEleccion match {
-    case Heroico => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.lastOption)
-    case Ordenado => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.headOption)
-    case Vidente => grupo.copy(puertaElegida = grupo.filtrarPuertasAbribles.sortBy(p => p.habitacion.recorrerHabitacion(grupo).puntaje()).lastOption)
->>>>>>> 9837d801c788b95e5a1dc9f66bbbd1e03acd7f67
-  }*/
-
-  def estoyVivo() : Boolean = {
-    !(saludActual == 0);
-  }
-  // def matarCondicion(condicion: Heroe): Heroe;
+  def estoyVivo() : Boolean = saludActual > 0
   def getVelocidad() : Int = atributos.velocidadBase;
-
-
   def perderVida(vidaAPerder : Int) : Heroe = {
     if (vidaResultante(vidaAPerder) > 0){
       bajarVida(vidaAPerder);
@@ -51,31 +27,6 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
       bajarVida(saludActual)
     }
   }
-  def habilidaEnSusManos():Int ={
-    trabajo match {
-      case Ladrón(habilidadBase) => habilidadBase + 3 * nivel
-      case _ => 0
-    }
-  }
-
-  /*  def matarCondicion(condicion: EstadoHeroe): EstadoHeroe ={
-      if (this == condicion) {
-        this.morir()
-      }else
-        this.copy()
-    }*/
-
-
-
-  // DONDE PONGO ESTO??
-  /*  def esCompatible(grupo: GrupoVivo) : Boolean = {
-      compatibilidad match{
-        case introvertidos =>  grupo.length <= 3;
-        case bigotes => // que le caen bien los grupos donde no hay ladrones
-        case interesados(objParticular: Item) => // se suman a un grupo solamente si tiene cierto objeto  particular que le interesa.
-        case loquitos => //siempre van a querer pelearse porque no les cae bien nadie
-      }
-    }*/
 }
 
 case class Atributos(val fuerzaBase : Int, val velocidadBase : Int)
@@ -83,7 +34,9 @@ case class Atributos(val fuerzaBase : Int, val velocidadBase : Int)
 trait Trabajo
 
 case object Guerrero extends Trabajo
-case class Ladrón(val habilidadBase : Int) extends Trabajo
+case class Ladrón(val habilidadBase : Int) extends Trabajo{
+  def habilidadEnSusManos(nivelLadron : Int):Int = habilidadBase + 3 * nivelLadron
+}
 case class Mago(val hechizosAprendibles : List[HechizoAprendible]) extends Trabajo{
   def conoceElHechizo(hechizo : Hechizo, nivelMago : Int) : Boolean = {
     hechizosAprendibles.exists(h => h.hechizo == hechizo && h.conoceElHechizo(nivelMago))
@@ -98,3 +51,28 @@ case class HechizoAprendible(val nivelRequerido : Int, val hechizo : Hechizo){
 
 trait Hechizo
 case object Vislumbrar extends Hechizo
+
+abstract class CriterioEleccion(val criterio : Grupo => Option[Puerta])
+case class Heroico(_criterio : Grupo => Option[Puerta] = _.filtrarPuertasAbribles.lastOption) extends CriterioEleccion(_criterio)
+case class Ordenado(_criterio : Grupo => Option[Puerta] = _.filtrarPuertasAbribles.headOption)extends CriterioEleccion(_criterio)
+case class Vidente(_criterio : Grupo => Option[Puerta]= (grupo) => grupo.filtrarPuertasAbribles.sortBy(unaPuerta => unaPuerta.habitacion.recorrerHabitacion(grupo).puntaje()).lastOption) extends CriterioEleccion(_criterio)
+
+trait Compatibilidad {
+  type Personalidad = Grupo => Boolean
+  val criterio: Personalidad
+}
+case object Introvertido extends Compatibilidad {
+  override val criterio: Personalidad = _._heroes.length <= 3
+}
+case object Bigotes extends Compatibilidad{
+  override val criterio: Personalidad = ! _._heroes.exists(h => h.trabajo match {
+    case Ladrón(a) => true
+    case _ => false
+  })
+}
+case class Interesados(objParticular: Item) extends Compatibilidad{
+  override val criterio: Personalidad = _._cofre.contieneItem(objParticular)
+}
+case object Loquitos extends Compatibilidad{
+  override val criterio: Personalidad = _ => false
+}
