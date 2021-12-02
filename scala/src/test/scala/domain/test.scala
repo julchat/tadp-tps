@@ -2,7 +2,6 @@ package domain
 
 import org.scalatest.freespec.AnyFreeSpec
 
-
 class test extends AnyFreeSpec {
 
   "Trabajos" - {
@@ -32,40 +31,42 @@ class test extends AnyFreeSpec {
       val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico())
       val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
       val guerrerodos = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
+      val mago = Heroe(atributos, 2, 8, Mago(hechizos), Loquitos, Heroico())
+
+      var heroes=List[Heroe](guerrerouno,ladron,guerrerodos,mago)
+      var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
+      var grupo = Grupo( heroes,cofre,List.empty)
+
+      val resuno = Habitacion(NoPasaNada,List.empty).recorrerHabitacion(grupo)
+      assert(resuno.cantidadDeVivos()==4)
+
+      // Se muere el MAGO por que el dardo quita 10 de salud y tiene 8
+      val resdos = Habitacion(MuchosMuchosDardos,List.empty).recorrerHabitacion(grupo)
+      assert(resdos.cantidadDeVivos()==3)
+    }
+
+    "si una de las habitaciones tiene trampa de leones, muere el mas lento" in {
+      var atributos = Atributos(100, 50)
+      var atributosMasLento = Atributos(100, 5)
+      var hechizos = List(HechizoAprendible(2, Vislumbrar))
+      val ladron = Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico())
+      val guerrerouno = Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico())
+      val guerrerodos = Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico())
       val mago = Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico())
 
       var heroes=List[Heroe](guerrerouno,ladron,guerrerodos,mago)
 
       var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
       //var grupo=GrupoVivo(heroes,cofre,Habitacion((NoPasaNada,TrampaDeLeones),Puerta((NoPasaNada,TesoroPerdido),(Cerrada,Escondida))))
-      var grupo = Grupo( heroes,cofre,List.empty)
-      val resGrupo = Habitacion(NoPasaNada,List.empty).recorrerHabitacion(grupo)
-      assert(resGrupo.cantidadDeVivos()==4)
-      
+      var grupo=Grupo(heroes,cofre,List.empty)
 
+
+/*      val calabozo = new Calabozo(Puerta(Some(Habitacion(TrampaDeLeones,List.empty)),List.empty),Puerta(None,List.empty))
+      assert(calabozo.recorrer(grupo).cantidadDeVivos() == 3)*/
+
+      val restres = Habitacion(TrampaDeLeones,List.empty).recorrerHabitacion(grupo)
+      assert(restres.cantidadDeVivos() === 3)
     }
-
-    "si una de las habitaciones tiene trampa de leones, muere el mas lento" in {
-    /*  var atributos = Atributos(100, 50, 80)
-      var atributosMasLento = Atributos(100, 5, 80)
-      var hechizos = List(HechizoAprendible(2, Vislumbrar))
-      val ladron = Vivo(Heroe(atributos, 2, 100, Ladrón(30), Loquitos, Heroico))
-      val guerrerouno = Vivo(Heroe(atributos, 2, 100, Guerrero, Loquitos, Heroico))
-      val guerrerodos = Vivo(Heroe(atributosMasLento, 2, 100, Guerrero, Loquitos, Heroico))
-      val mago = Vivo(Heroe(atributos, 2, 100, Mago(hechizos), Loquitos, Heroico))
-
-      var heroes=List[EstadoHeroe](guerrerouno,ladron,guerrerodos,mago)
-
-      var cofre=Cofre(List(Ganzúas,Llave),List("chuchillo","pistola"),45)
-      //var grupo=GrupoVivo(heroes,cofre,Habitacion((NoPasaNada,TrampaDeLeones),Puerta((NoPasaNada,TesoroPerdido),(Cerrada,Escondida))))
-      var grupo=GrupoVivo[EstadoHeroe](heroes,cofre,Habitacion(NoPasaNada,List.empty),List.empty)
-
-      val calabozo = new Calabozo(Puerta(Some(Habitacion(TrampaDeLeones,List.empty)),List.empty),Puerta(None,List.empty))
-
-      assert(calabozo.recorrer(grupo).cantidadDeVivos() == 3)
-      */
-    }
-
   }
 
   "Calabozo - con grupo perdido" - {
