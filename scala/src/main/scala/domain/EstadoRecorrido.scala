@@ -2,8 +2,8 @@ package domain
 abstract class EstadoRecorrido(val grupo : Grupo){
   def recorrerHastaFallarOEncontrarSalida(puertaSalida: Puerta): EstadoRecorrido = {
     this.map(g => g.getLider().get.elegirPuerta(grupo) match {
-      case Some(puerta) if puerta != puertaSalida => puerta.habitacion.recorrerHabitacion(g).estadoDelGrupo().recorrerHastaFallarOEncontrarSalida(puertaSalida)
-      case Some(_) => RecorridoExitoso(grupo)
+      case Some(puerta) if puerta != puertaSalida => puerta.habitacion.recorrerHabitacion(g.agregarPuerta(puerta)).estadoDelGrupo().recorrerHastaFallarOEncontrarSalida(puertaSalida)
+      case Some(puerta) => RecorridoExitoso(grupo.agregarPuerta(puerta))
       case None => RecorridoFallidoPorPerdición(grupo)
     })
   }

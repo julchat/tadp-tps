@@ -24,6 +24,7 @@ case class Heroe(val atributos : Atributos, val nivel : Int, val saludActual : I
       bajarVida(saludActual)
     }
   }
+  def seLlevaBien(grupo : Grupo) : Boolean = compatibilidad.criterio.apply(grupo)
 }
 
 case class Atributos(val fuerzaBase : Int, val velocidadBase : Int)

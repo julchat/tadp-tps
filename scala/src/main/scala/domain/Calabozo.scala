@@ -5,7 +5,7 @@ trait Condicion extends (Grupo => Boolean)
 class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
 
   def recorrerCalabozo(grupo: Grupo): EstadoRecorrido = {
-    val recorrido: EstadoRecorrido = puertaPrincipal.habitacion.recorrerHabitacion(grupo).estadoDelGrupo()
+    val recorrido: EstadoRecorrido = puertaPrincipal.habitacion.recorrerHabitacion(grupo.agregarPuerta(puertaPrincipal)).estadoDelGrupo()
     recorrido.recorrerHastaFallarOEncontrarSalida(puertaSalida)
   }
   def mejorGrupo(grupos: List[Grupo]): Grupo = grupos.sortBy(g => this.recorrerCalabozo(g).grupo.puntaje()).last
@@ -18,12 +18,12 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   }
 }
 
-case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad]) { // si no hay habitacion, la puerta es la salida?
+case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad], val nombre : String = null) { // si no hay habitacion, la puerta es la salida?
   type Condicion = (Grupo => Boolean)
   val condicionBase: Condicion = grupo => {
     grupo._heroes.exists(heroe => heroe.trabajo match {
-      // [TODO] case l : Ladrón  => l.habilidadEnSusManos(heroe.nivel) >= 20
-      case Ladrón(habilidadBase) => (habilidadBase + (heroe.nivel * 3)) >= 20
+      case l : Ladrón  => l.habilidadEnSusManos(heroe.nivel) >= 20
+      //case Ladrón(habilidadBase) => (habilidadBase + (heroe.nivel * 3)) >= 20
       case _ => false
     })
   }
@@ -40,8 +40,8 @@ case object Cerrada extends Dificultad {
   override def condicionesParaAbrir(grupo: Grupo) : List[Condicion] = {
     val condicion1 : Condicion = grupo => grupo._cofre.items.contains(Llave)
     val condicion2 : Condicion = grupo => grupo.exists(heroe => heroe.trabajo match {
-      // [TODO] case l : Ladrón  => l.habilidadEnSusManos(heroe.nivel) >= 10 || grupo._cofre.items.contains(Ganzúas)
-      case Ladrón(habilidadBase)  => (habilidadBase + (heroe.nivel * 3)) >= 10 || grupo._cofre.items.contains(Ganzúas)
+      case l : Ladrón  => l.habilidadEnSusManos(heroe.nivel) >= 10 || grupo._cofre.items.contains(Ganzúas)
+      //case Ladrón(habilidadBase)  => (habilidadBase + (heroe.nivel * 3)) >= 10 || grupo._cofre.items.contains(Ganzúas)
       case _ => false
     })
     List(condicion1,condicion2)
@@ -51,8 +51,8 @@ case object Cerrada extends Dificultad {
 case object Escondida extends Dificultad{
   override def condicionesParaAbrir(grupo: Grupo) : List[Condicion] = {
     val condicion1 : Condicion = (grupo) => grupo.exists(heroe => heroe.trabajo match {
-      // [TODO] case l : Ladrón  => l.habilidadEnSusManos(heroe.nivel) >= 6
-      case Ladrón(habilidadBase)  => (habilidadBase + (heroe.nivel * 3)) >= 6
+      case l : Ladrón  => l.habilidadEnSusManos(heroe.nivel) >= 6
+      //case Ladrón(habilidadBase)  => (habilidadBase + (heroe.nivel * 3)) >= 6
       case _ => false
     })
     val condicion2 : Condicion = (grupo) => grupo.exists(heroe => heroe.trabajo match {
@@ -90,17 +90,14 @@ case class TesoroPerdido(item: Item) extends Situacion {
   def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.agregarABotin(item)
 }
 case object MuchosMuchosDardos extends  Situacion {
-  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroes(h => h.perderVida(10))
+  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroesVivos(h => h.perderVida(10))
 }
 case object TrampaDeLeones extends Situacion {
-  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroes(h => if (h == grupo.masLento()){h.bajarVida(h.saludActual)} else h)
+  def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroesVivos(h => if (h == grupo.masLento()){h.bajarVida(h.saludActual)} else h)
 }
 case class Encuentro(heroe: Heroe) extends Situacion {
   def enfrentaAGrupo(grupo : Grupo) = {
-    type Personalidad = (Grupo => Boolean)
-    val personalidadEncuentro: Personalidad = heroe.compatibilidad.criterio;
-    val personalidadLider: Personalidad = grupo.getLider().get.compatibilidad.criterio;
-    if (personalidadEncuentro.apply(grupo) && personalidadLider.apply(grupo.agregarHeroe(heroe))) {
+    if (heroe.seLlevaBien(grupo) && grupo.getLider().get.seLlevaBien(grupo.agregarHeroe(heroe))) {
       grupo.agregarHeroe(heroe)
     } else {
       grupo.pelear(heroe)

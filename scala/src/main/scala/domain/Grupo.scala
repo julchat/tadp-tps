@@ -1,6 +1,7 @@
 package domain;
 
-case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitacionesRecorridas: List[Habitacion] = List()) {
+case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitacionesRecorridas: List[Habitacion] = List(), val puertasAbiertas : List[Puerta] = List()) {
+  def agregarPuerta(puerta: Puerta): Grupo = this.copy(puertasAbiertas = puertasAbiertas.appended(puerta))
 
   def agregarHabitacion(habitacionRecorrida: Habitacion): Grupo = {
     this.copy(habitacionesRecorridas = habitacionesRecorridas.appended(habitacionRecorrida))
@@ -17,8 +18,10 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
   def cantidadDeMuertos(): Int = {
     _heroes.count { unHeroe => !unHeroe.estoyVivo() };
   }
-
-  def filtrarPuertasAbribles : List[Puerta] = habitacionesRecorridas.flatMap(h => h.puertas.filter(p => p.puedoSerAbierta(this)))
+  // A es las puertas podes abrir ahora
+  // B son las puertas abriste
+  // A - B
+  def filtrarPuertasAbribles : List[Puerta] = habitacionesRecorridas.flatMap(h => h.puertas.filter(p => p.puedoSerAbierta(this))).filter(pu => !(puertasAbiertas.contains(pu)))
   def cantidadDeVivos(): Int = {
     _heroes.length - cantidadDeMuertos();
   }
@@ -36,7 +39,7 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
   def masLento(): Heroe = {
     _heroes.sortBy(uh => uh.getVelocidad()).head
   }
-  // TODO : Se usa para enfrentar al heroe si no es compatible
+
   def fuerzaTotal(): Int = {
     _heroes.foldRight[Int](0)(_.getFuerza()+_)
   }
@@ -49,7 +52,7 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
     }
     else {
       // Todos los integrantes(vivos) pierden vida igualitariamente
-      this.transformarHeroes(h => h.perderVida((fuerzaDelExtranjero / cantidadDeVivos()).toInt))
+      this.transformarHeroesVivos(h => h.perderVida((fuerzaDelExtranjero / cantidadDeVivos()).toInt))
     }
   }
 
@@ -60,15 +63,12 @@ case class Grupo(val _heroes : List[Heroe], val _cofre : Cofre, val habitaciones
 
   def contieneItem(unItem: Item): Boolean = _cofre.contieneItem(unItem)
 
-  def transformarHeroes(funcion: Heroe => Heroe ): Grupo = this.copy(_heroes = _heroes.map(unHeroe => funcion.apply(unHeroe)))
+  def transformarHeroesVivos(funcion: Heroe => Heroe ): Grupo = this.copy(_heroes = _heroes.map(unHeroe => if(unHeroe.estoyVivo()) {funcion.apply(unHeroe)} else unHeroe))
 
   def aumentarNiveles(niveles: Int): Grupo = {
-    this.copy(_heroes = _heroes.map(h => h.subirNivel(niveles)))
+    this.copy(_heroes = _heroes.map(h => if (h.estoyVivo()) {h.subirNivel(niveles)} else h))
   }
 }
-
-
-
 
 case class Cofre(val items : List[Item], val armas : List[String], val tesoroAcumulado : Int) {
   def agregarItem(item: Item): Cofre = this.copy(items = items.appended(item));
