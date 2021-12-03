@@ -68,7 +68,7 @@ class test extends AnyFreeSpec {
       assert(restres.cantidadDeVivos() === 3)
     }
   }
-
+/*
   "Calabozo - con grupo perdido" - {
     val heroeAEncontrarse: Heroe = Heroe(Atributos(10,2),5,25,Mago(List(HechizoAprendible(15,Vislumbrar))),Bigotes,Heroico())
 
@@ -98,9 +98,9 @@ class test extends AnyFreeSpec {
 
     val grupoDespDelRecorrido = calabozoTenebroso.recorrerCalabozo(grupoFantastico)
 
-    println(grupoDespDelRecorrido.grupo.puntaje() + " -> " +
-      grupoDespDelRecorrido.grupo.cantidadDeVivos() + " -> " +
-      grupoDespDelRecorrido.grupo.cantidadDeMuertos())
+    //println(grupoDespDelRecorrido.grupo.puntaje() + " -> " +
+      //grupoDespDelRecorrido.grupo.cantidadDeVivos() + " -> " +
+      //grupoDespDelRecorrido.grupo.cantidadDeMuertos())
   }
 
   "Calabozo con grupo exitoso" - {
@@ -172,4 +172,5 @@ class test extends AnyFreeSpec {
    // print(calabozoTenebroso.recorrerCalabozo(grupoFantastico))
 
   }
+*/
 }
