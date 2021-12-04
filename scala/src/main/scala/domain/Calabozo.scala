@@ -1,6 +1,5 @@
 package domain
-import scala.collection.immutable.Range
-import scala.util.Try
+
 trait Condicion extends (Grupo => Boolean)
 class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
 
@@ -18,7 +17,7 @@ class Calabozo(val puertaPrincipal : Puerta, val puertaSalida : Puerta) {
   }
 }
 
-case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad], val nombre : String = null) { // si no hay habitacion, la puerta es la salida?
+case class Puerta(habitacion: Habitacion, dificultades : List[Dificultad], val nombre : String = null) {
   type Condicion = (Grupo => Boolean)
   val condicionBase: Condicion = grupo => {
     grupo._heroes.exists(heroe => heroe.trabajo match {
@@ -96,7 +95,7 @@ case object TrampaDeLeones extends Situacion {
   def enfrentaAGrupo(grupo: Grupo): Grupo = grupo.transformarHeroesVivos(h => if (h == grupo.masLento()){h.bajarVida(h.saludActual)} else h)
 }
 case class Encuentro(heroe: Heroe) extends Situacion {
-  def enfrentaAGrupo(grupo : Grupo) = {
+  def enfrentaAGrupo(grupo : Grupo): Grupo = {
     if (heroe.seLlevaBien(grupo) && grupo.getLider().get.seLlevaBien(grupo.agregarHeroe(heroe))) {
       grupo.agregarHeroe(heroe)
     } else {
