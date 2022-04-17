@@ -1,3 +1,1 @@
-# TADP
-
-Este repositorio tiene la estructura básica para arrancar a _darle átomos_ a la materia! :rocket:
+TPs realizados en grupo para Implementación de Paradigma Orientado a Aspectos en Ruby y Combinación Objetos-Funcional en Scala
